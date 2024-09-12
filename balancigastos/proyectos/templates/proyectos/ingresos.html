@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Detalles de proyecto{% endblock %}
+{% load currency %}
+{% block content %}
+
+
+<h4 class="h4 text-center mt-3 text-danger">Ingresos {{ proyecto.proyecto }}</h4>
+
+{% if proyecto %}
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'proyectos:detalles_proyecto' proyecto.slug %}">Detalles de proyecto</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'gastos:gastos_vehiculos' proyecto.slug %}">Gastos vehículos</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'gastos:gastos_generales' proyecto.slug %}">Gastos generales</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="{% url 'proyectos:ingresos' proyecto.slug %}">Ingresos</a>
+    </li>
+</ul>
+{% endif %}
+
+<hr class="border border-danger border-3 opacity-75">
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Concepto</th>
+                <th scope="col">Monto ingreso</th>
+                <th scope="col">Referencia</th>
+                <th scope="col">Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ingreso in ingresos_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ ingreso.concepto }}</td>
+                <td>{{ ingreso.ingreso|pesos }}</td>
+                <td>{{ ingreso.referencia }}</td>
+                <td>{{ ingreso.fecha|date:"d-M-y" }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="1"></td>
+                <td><strong>Total:</strong></td>
+                <td><strong>{{ total_monto|pesos }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<a href="{% url 'proyectos:registrar_ingreso' proyecto.slug %}" class="btn btn-danger mb-3">Registrar ingreso</a>
+
+{% endblock %}

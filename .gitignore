@@ -1,0 +1,12 @@
+# Entorno Virtual
+balancigastos_env/
+
+# Archivos de configuración de IDE
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Archivos del sistema
+.DS_Store
+.env

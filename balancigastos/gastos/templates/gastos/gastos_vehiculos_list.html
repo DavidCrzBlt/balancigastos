@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Lista de gastos vehículos{% endblock %}
+{% load currency %}
+{% block content %}
+
+<h4 class="h4 text-center mt-3 text-danger"> Gastos de vehículos {{proyecto.proyecto}}</h4>
+
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'proyectos:detalles_proyecto' proyecto.slug %}">Detalles de proyecto</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="{% url 'gastos:gastos_vehiculos' proyecto.slug %}">Gastos vehículos</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'gastos:gastos_generales' proyecto.slug %}">Gastos generales</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'proyectos:ingresos' proyecto.slug %}">Ingresos</a>
+    </li>
+</ul>
+
+<hr class="border border-danger border-3 opacity-75">
+
+<div class="table-responsive">
+
+    <table class="table table-stripped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Vehiculo</th>
+                <th scope="col">Placas</th>
+                <th scope="col">Volumen de combustible (L)</th>
+                <th scope="col">Monto</th>
+                <th scope="col">Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gasto in gastosvehiculos_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ gasto.vehiculo }}</td>
+                <td>{{ gasto.vehiculo.placas }}</td>
+                <td>{{ gasto.cantidad_combustible|floatformat:2 }}</td>
+                <td>{{ gasto.monto|pesos }}</td>
+                <td>{{ gasto.fecha|date:"d-M-y" }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="3"></td>
+                <td><strong>Total:</strong></td>
+                <td><strong>{{ total_monto|pesos }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="container m-4">
+    <a href="{% url 'gastos:registro_gastos_vehiculos' proyecto.slug %}" class="btn btn-danger">Registrar gasto de vehículo</a>
+    
+    <a href="{% url 'gastos:registro_vehiculos' %}" class="btn btn-danger">Registrar vehículo</a>
+</div>
+
+{% endblock %}
