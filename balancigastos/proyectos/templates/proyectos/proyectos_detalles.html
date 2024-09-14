@@ -3,6 +3,8 @@
 {% load currency %}
 {% block content %}
 
+{% include 'navbar_profile.html' %}
+
 {% if object %}
 <h4 class="h4 text-center mt-3 text-danger">Detalles {{ object.proyecto }}</h4>
 
@@ -15,6 +17,15 @@
   </li>
   <li class="nav-item">
     <a class="nav-link" href="{% url 'gastos:gastos_generales' object.slug %}">Gastos generales</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'gastos:gastos_materiales' object.slug %}">Gastos materiales</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'gastos:gastos_mano_obra' object.slug %}">Gastos mano de obra</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'gastos:gastos_equipos' object.slug %}">Gastos equipos</a>
   </li>
   <li class="nav-item">
     <a class="nav-link" href="{% url 'proyectos:ingresos' object.slug %}">Ingresos</a>
@@ -30,6 +41,9 @@
     <li class="list-group-item"><strong>Ingresos Totales:</strong> {{ ingresos|pesos }}</li>
     <li class="list-group-item"><strong>Gastos vehículos:</strong> {{ gastos_vehiculos|pesos }}</li>
     <li class="list-group-item"><strong>Gastos generales:</strong> {{ gastos_generales|pesos }}</li>
+    <li class="list-group-item"><strong>Gastos materiales:</strong> {{ gastos_materiales|pesos }}</li>
+    <li class="list-group-item"><strong>Gastos mano de obra:</strong> {{ gastos_mano_obra|pesos }}</li>
+    <li class="list-group-item"><strong>Gastos equipos:</strong> {{ gastos_equipos|pesos }}</li>
     <li class="list-group-item"><strong>Total Gastos:</strong> {{ total_gastos|pesos }}</li>
     <hr class="border border-dark border-3 opacity-75">
     <li class="list-group-item"><strong>Resultado Neto:</strong> {{ neto|pesos }}</li>

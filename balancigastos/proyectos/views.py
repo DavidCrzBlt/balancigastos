@@ -2,8 +2,10 @@ from django.shortcuts import render,redirect, get_object_or_404
 from .forms import ProyectosForm, IngresosForm
 from django.views.generic import ListView, DetailView
 from .models import Proyectos, Ingresos
-from gastos.models import GastosGenerales, GastosVehiculos
+from gastos.models import GastosGenerales, GastosVehiculos, GastosMateriales, GastosManoObra, GastosEquipos
 from django.db.models import Sum, F
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 import io
 from django.http import HttpResponse
@@ -11,7 +13,7 @@ from openpyxl import Workbook
 
 # Create your views here.
 
-class IngresosListView(ListView):
+class IngresosListView(LoginRequiredMixin,ListView):
     model = Ingresos
     template_name = "proyectos/ingresos.html"
 
@@ -33,7 +35,7 @@ class IngresosListView(ListView):
         context['proyecto'] = proyecto
         return context 
 
-class ProyectosListView(ListView):
+class ProyectosListView(LoginRequiredMixin,ListView):
     model = Proyectos
     template_name = "proyectos/proyectos.html"
     context_object_name = "projects"
@@ -86,7 +88,7 @@ class ProyectosListView(ListView):
         return context
 
     
-class ProyectosDetailView(DetailView):
+class ProyectosDetailView(LoginRequiredMixin,DetailView):
     model = Proyectos
     template_name = "proyectos/proyectos_detalles.html"
 
@@ -104,18 +106,31 @@ class ProyectosDetailView(DetailView):
         gastos_generales_result = GastosGenerales.objects.filter(proyecto=proyecto).aggregate(total_gastos_generales=Sum('monto_concepto'))
         gastos_generales = gastos_generales_result['total_gastos_generales'] if gastos_generales_result['total_gastos_generales'] is not None else 0
 
+        gastos_materiales_result = GastosMateriales.objects.filter(proyecto=proyecto).aggregate(total_gastos_materiales=Sum('monto'))
+        gastos_materiales = gastos_materiales_result['total_gastos_materiales'] if gastos_materiales_result['total_gastos_materiales'] is not None else 0
+
+        gastos_mano_obra_result = GastosManoObra.objects.filter(proyecto=proyecto).aggregate(total_gastos_mano_obra=Sum('monto'))
+        gastos_mano_obra = gastos_mano_obra_result['total_gastos_mano_obra'] if gastos_mano_obra_result['total_gastos_mano_obra'] is not None else 0
+
+        gastos_equipos_result = GastosEquipos.objects.filter(proyecto=proyecto).aggregate(total_gastos_equipos=Sum('monto_concepto'))
+        gastos_equipos = gastos_equipos_result['total_gastos_equipos'] if gastos_equipos_result['total_gastos_equipos'] is not None else 0
+
         # Add the numerical results
-        total_gastos = gastos_vehiculos + gastos_generales
+        total_gastos = gastos_vehiculos + gastos_generales + gastos_materiales + gastos_mano_obra + gastos_equipos
         neto = ingresos - total_gastos
 
         # Add values to the context
         context['ingresos'] = ingresos
         context['gastos_vehiculos'] = gastos_vehiculos
         context['gastos_generales'] = gastos_generales
+        context['gastos_materiales'] = gastos_materiales
+        context['gastos_mano_obra'] = gastos_mano_obra
+        context['gastos_equipos'] = gastos_equipos
         context['total_gastos'] = total_gastos
         context['neto'] = neto
         return context
 
+@login_required
 def registrar_proyecto(request):
     registrar_proyectos_form = ProyectosForm()
     if request.method == "POST":
@@ -129,6 +144,8 @@ def registrar_proyecto(request):
 
     return render(request,"proyectos/registrar_proyecto.html",{'proyectos_form':registrar_proyectos_form})
 
+
+@login_required
 def registrar_ingreso(request, slug):
     # Fetch the project based on the slug
     proyecto = Proyectos.objects.get(slug=slug)
@@ -153,6 +170,7 @@ def registrar_ingreso(request, slug):
         'proyecto': proyecto  # Pass the project to the template
     })
 
+@login_required
 def toggle_estatus_proyecto(request, slug):
     # Obtener el proyecto por su slug
     proyecto = get_object_or_404(Proyectos, slug=slug)
@@ -164,6 +182,7 @@ def toggle_estatus_proyecto(request, slug):
     # Redirigir a la página de detalle del proyecto o a la lista de proyectos
     return redirect('proyectos:proyectos')
 
+@login_required
 def export_proyectos_to_excel(request):
     # Crea un libro de trabajo y una hoja
     wb = Workbook()
@@ -171,7 +190,7 @@ def export_proyectos_to_excel(request):
     ws.title = 'Proyectos'
 
     # Añade encabezados
-    headers = ['ID', 'Nombre', 'Empresa', 'Estatus', 'Monto']  # Ajusta según tus campos
+    headers = ['ID', 'Nombre', 'Empresa', 'Estatus', 'Resultados']  # Ajusta según tus campos
     ws.append(headers)
 
     # Añade datos de los proyectos
@@ -189,6 +208,8 @@ def export_proyectos_to_excel(request):
     response['Content-Disposition'] = 'attachment; filename=proyectos.xlsx'
     return response
 
+
+@login_required
 def export_project_details_to_excel(request, proyecto_slug):
     # Obtén el proyecto
     proyecto = Proyectos.objects.get(slug=proyecto_slug)
@@ -237,6 +258,33 @@ def export_project_details_to_excel(request, proyecto_slug):
     for gasto in gastos_generales:
         fecha_gasto_general = gasto.fecha.replace(tzinfo=None)
         ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.monto_concepto, gasto.descripcion, gasto.ubicacion, fecha_gasto])
+
+    # Hoja de Gastos Materiales
+    ws4 = wb.create_sheet(title='Gastos Materiales')
+    headers4 = ['ID', 'Concepto', 'Comprador', 'Monto Concepto', 'Descripción', 'Proveedor', 'Fecha']
+    ws4.append(headers4)
+    gastos_materiales = GastosMateriales.objects.filter(proyecto=proyecto)
+    for gasto in gastos_materiales:
+        fecha_gasto_material = gasto.fecha.replace(tzinfo=None)
+        ws4.append([gasto.id, gasto.concepto_material, gasto.comprador, gasto.monto, gasto.descripcion, gasto.proveedor, fecha_gasto_material])
+
+    # Hoja de Gastos Mano de obra
+    ws4 = wb.create_sheet(title='Gastos Mano de Obra')
+    headers4 = ['ID', 'Nómina', 'IMSS', 'INFONAVIT', 'ISN', 'ISR', 'Monto', 'Fecha']
+    ws4.append(headers4)
+    gastos_mano_obra = GastosManoObra.objects.filter(proyecto=proyecto)
+    for gasto in gastos_mano_obra:
+        fecha_gasto_mano_obra = gasto.fecha.replace(tzinfo=None)
+        ws4.append([gasto.id, gasto.nomina, gasto.imss, gasto.infonavit, gasto.isn, gasto.isr, gasto.monto, fecha_gasto_mano_obra])
+
+    # Hoja de Gastos de equipos
+    ws4 = wb.create_sheet(title='Gastos Equipos')
+    headers4 = ['ID', 'Concepto', 'Comprador', 'Tiempo de renta', 'Monto', 'Descripción', 'Proveedor', 'Fecha']
+    ws4.append(headers4)
+    gastos_equipos = GastosEquipos.objects.filter(proyecto=proyecto)
+    for gasto in gastos_equipos:
+        fecha_gasto_equipos = gasto.fecha.replace(tzinfo=None)
+        ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.tiempo_renta, gasto.monto_concepto, gasto.descripcion, gasto.proveedor, fecha_gasto_equipos])
 
     # Guarda el libro de trabajo en un buffer
     buffer = io.BytesIO()

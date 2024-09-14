@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+{% include 'navbar_profile.html' %}
+<div class="container">
+    <h2 class="h2 text-center">Edit Profile</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% load bootstrap_filters %}
+        <div class="mb-3">
+            <label for="formFile" class="form-label"></label>
+            {{ form.profile_picture|addclass:"form-control"|addtype:"file"|addid:"formFile" }}
+        </div>
+        <div class="form-floating mb-3">
+            {{ form.bio|addclass:"form-control"|addid:"floatingTextarea" }}
+            <label for="floatingTextarea">Tell us about yourself</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>
+{% endblock %}

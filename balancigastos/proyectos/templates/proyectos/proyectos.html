@@ -3,6 +3,8 @@
 {% load currency %}
 {% block content %}
 
+{% include 'navbar_profile.html' %}
+
 <h4 class="h4 text-center text-danger mt-3">Lista de proyectos</h4>
 
 <nav class="navbar bg-body-tertiary">
@@ -59,7 +61,7 @@
             <th scope="col">Nombre de proyecto</th>
             <th scope="col">Empresa</th>
             <th scope="col">Estatus</th>
-            <th scope="col">Monto</th>
+            <th scope="col">Resultado</th>
          </tr>
       </thead>
       <tbody>
@@ -76,7 +78,11 @@
             <td><a class="btn btn-danger" href="{% url 'proyectos:toggle_estatus_proyecto' project.slug %}">Inactivo</a>
             </td>
             {% endif %}
+            {% if project.total < 0 %}
+            <td class="text-danger">{{ project.total|pesos }}</td>
+            {% else %}
             <td>{{ project.total|pesos }}</td>
+            {% endif %}
          </tr>
          {% endfor %}
          <tr>

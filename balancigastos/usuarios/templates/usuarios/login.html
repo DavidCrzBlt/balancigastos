@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+<div class="container">
+    <h2 class="my-4 text-center">Login</h2>
+    
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+            {% load bootstrap_filters %}
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                {{ form.username|addclass:"form-control"|addid:"username" }}
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                {{ form.password|addclass:"form-control"|addid:"password" }}
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
