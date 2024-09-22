@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from .models import Profile
 from .forms import ProfileForm, UserRegisterForm
 
@@ -33,3 +33,7 @@ def edit_profile(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, 'usuarios/edit_profile.html', {'username': profile,'form':form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('usuarios:login')

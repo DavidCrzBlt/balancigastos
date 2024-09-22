@@ -6,7 +6,7 @@
 {% include 'navbar.html' %}
 <div class="container">
     <h2 class="my-4 text-center">Iniciar sesión</h2>
-    
+
     <div class="container">
         <form method="post">
             {% csrf_token %}
@@ -20,7 +20,12 @@
                 {{ form.password|addclass:"form-control"|addid:"password" }}
             </div>
             <button type="submit" class="btn btn-primary">Ingresar</button>
+            <a href="{% url 'usuarios:signup' %}" class="btn btn-primary">Regístrate</a>
         </form>
+    </div>
+    <br>
+    <div class="container">
+        
     </div>
 </div>
 {% endblock %}
