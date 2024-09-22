@@ -11,23 +11,23 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        Profile
+                        Perfil
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item" href="{% url 'usuarios:profile' %}">My profile</a>
+                            <a class="dropdown-item" href="{% url 'usuarios:profile' %}">Mi perfil</a>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
                         <li>
-                            <a class="dropdown-item" href="{% url 'usuarios:password_change' %}">Change Password</a>
+                            <a class="dropdown-item" href="{% url 'usuarios:password_change' %}">Cambiar contraseña</a>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
                         <li>
-                            <a class="dropdown-item" href="{% url 'usuarios:edit_profile' %}">Edit Profile</a>
+                            <a class="dropdown-item" href="{% url 'usuarios:edit_profile' %}">Editar perfil</a>
                         </li>
                     </ul>
                 </li>
@@ -35,7 +35,7 @@
                     <a class="nav-link" href="{% url 'proyectos:proyectos' %}">Proyectos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-danger" href="{% url 'usuarios:logout' %}">Logout</a>
+                    <a class="nav-link text-danger" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>
                 </li>
             </ul>
         </div>

@@ -5,6 +5,7 @@ from django.utils.text import slugify
 class Proyectos(models.Model):
 
     proyecto = models.CharField(max_length=255)
+    clave_proyecto = models.CharField(max_length=80,blank=True,default="pro")
     empresa = models.CharField(max_length=255)
     estatus = models.BooleanField(default=True)
     total = models.FloatField(default=0)

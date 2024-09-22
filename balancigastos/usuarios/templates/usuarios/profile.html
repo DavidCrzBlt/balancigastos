@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}Perfil{% endblock %}
 
 {% block content %}
 {% include 'navbar_profile.html' %}
@@ -8,23 +8,15 @@
     <div class="row">
         <div class="col-md-3 text-center">
             {% if username.profile_picture %}
-            <img src="{{ username.profile_picture.url }}" alt="Profile Picture" class="profile-img mb-3">
+            <img src="{{ username.profile_picture.url }}" alt="Foto de perfil" class="profile-img mb-3">
             {% else %}
-            <p>No profile picture</p>
+            <p>No hay foto de perfil</p>
             {% endif %}
-            <h3>Welcome, {{ username.user}}!</h3>
+            <h3>Bienvenido, {{ username.user}}!</h3>
         </div>
         <div class="col-md-9">
-            <h4 class="text-center">Bio</h4>
+            <h4 class="text-center">Biografía</h4>
             <p>{{ username.bio }}</p>
-        </div>
-    </div>
-    <div class="row mt-3">
-        <div class="col-md-3">
-            <button class="btn btn-primary btn-block">Button 1</button>
-            <button class="btn btn-primary btn-block">Button 2</button>
-            <button class="btn btn-primary btn-block">Button 3</button>
-            <button class="btn btn-primary btn-block">Button 4</button>
         </div>
     </div>
 </div>
