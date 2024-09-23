@@ -5,7 +5,9 @@ from django.utils import timezone
 # Create your models here.
 
 class Empleados(models.Model):
-    empleado = models.CharField(max_length=255,null=False)
+    nombres = models.CharField(max_length=255,null=False)
+    apellido_paterno = models.CharField(max_length=255,null=False)
+    apellido_materno = models.CharField(max_length=255,null=False)
     rfc = models.CharField(max_length=100,null=False)
     infonavit = models.BooleanField(default=False)
     imss = models.BooleanField(default=False)

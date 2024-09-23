@@ -48,6 +48,7 @@
                 <th scope="col">Proveedor</th>
                 <th scope="col">Tiempo de renta</th>
                 <th scope="col">Monto</th>
+                <th scope="col">I.V.A.</th>
                 <th scope="col">Fecha</th>
             </tr>
         </thead>
@@ -60,6 +61,7 @@
                 <td>{{ gasto.proveedor }}</td>
                 <td>{{ gasto.tiempo_renta }}</td>
                 <td>{{ gasto.monto|pesos }}</td>
+                <td>{{ gasto.iva|pesos }}</td>
                 <td>{{ gasto.fecha|date:"d-M-y" }}</td>
             </tr>
             {% endfor %}
@@ -67,6 +69,7 @@
                 <td colspan="4"></td>
                 <td><strong>Total:</strong></td>
                 <td><strong>{{ total_monto|pesos }}</strong></td>
+                <td><strong>{{ total_iva|pesos }}</strong></td>
             </tr>
         </tbody>
     </table>

@@ -97,7 +97,8 @@ class ProyectosDetailView(LoginRequiredMixin,DetailView):
 
         # Add the numerical results
         total_gastos = gastos_vehiculos + gastos_generales + gastos_materiales + gastos_mano_obra + gastos_equipos + gastos_seguridad
-        neto = ingresos - total_gastos
+        total_neto = proyecto.total
+        iva_neto = proyecto.iva
 
         # Add values to the context
         context['ingresos'] = ingresos
@@ -108,7 +109,8 @@ class ProyectosDetailView(LoginRequiredMixin,DetailView):
         context['gastos_mano_obra'] = gastos_mano_obra
         context['gastos_equipos'] = gastos_equipos
         context['total_gastos'] = total_gastos
-        context['neto'] = neto
+        context['neto'] = total_neto
+        context['iva_neto'] = iva_neto
         return context
 
 @login_required

@@ -27,8 +27,12 @@ class IngresosListView(LoginRequiredMixin,ListView):
         # Calculate total monto using aggregate
         total_monto = Ingresos.objects.filter(proyecto=proyecto).aggregate(total=Sum('monto'))['total'] or 0
 
+        # Calculate total iva using aggregate
+        total_iva = Ingresos.objects.filter(proyecto=proyecto).aggregate(total=Sum('iva'))['total'] or 0
+
         # Add the total to the context
         context['total_monto'] = total_monto
+        context['total_iva'] = total_iva
         context['proyecto'] = proyecto
         return context 
 
@@ -49,8 +53,12 @@ class GastosVehiculosListView(LoginRequiredMixin,ListView):
         # Calculate total monto using aggregate
         total_monto = GastosVehiculos.objects.filter(proyecto=proyecto).aggregate(total=Sum('monto'))['total'] or 0
 
+        # Calculate total iva using aggregate
+        total_iva = GastosVehiculos.objects.filter(proyecto=proyecto).aggregate(total=Sum('iva'))['total'] or 0
+
         # Add the total to the context
         context['total_monto'] = total_monto
+        context['total_iva'] = total_iva
         context['proyecto'] = proyecto
         return context
 
@@ -71,8 +79,12 @@ class GastosGeneralesListView(LoginRequiredMixin,ListView):
         # Calculate total monto using aggregate
         total_monto = GastosGenerales.objects.filter(proyecto=proyecto).aggregate(total=Sum('monto'))['total'] or 0
 
+        # Calculate total iva using aggregate
+        total_iva = GastosGenerales.objects.filter(proyecto=proyecto).aggregate(total=Sum('iva'))['total'] or 0
+
         # Add the total to the context
         context['total_monto'] = total_monto
+        context['total_iva'] = total_iva
         context['proyecto'] = proyecto
         return context 
 
@@ -93,8 +105,12 @@ class GastosMaterialesListView(LoginRequiredMixin,ListView):
         # Calculate total monto using aggregate
         total_monto = GastosMateriales.objects.filter(proyecto=proyecto).aggregate(total=Sum('monto'))['total'] or 0
 
+        # Calculate total iva using aggregate
+        total_iva = GastosMateriales.objects.filter(proyecto=proyecto).aggregate(total=Sum('iva'))['total'] or 0
+        
         # Add the total to the context
         context['total_monto'] = total_monto
+        context['total_iva'] = total_iva
         context['proyecto'] = proyecto
         return context 
 
@@ -137,8 +153,12 @@ class GastosEquiposListView(LoginRequiredMixin,ListView):
         # Calculate total monto using aggregate
         total_monto = GastosEquipos.objects.filter(proyecto=proyecto).aggregate(total=Sum('monto'))['total'] or 0
 
+        # Calculate total iva using aggregate
+        total_iva = GastosEquipos.objects.filter(proyecto=proyecto).aggregate(total=Sum('iva'))['total'] or 0
+
         # Add the total to the context
         context['total_monto'] = total_monto
+        context['total_iva'] = total_iva
         context['proyecto'] = proyecto
         return context 
     
@@ -159,8 +179,12 @@ class GastosSeguridadListView(LoginRequiredMixin,ListView):
         # Calculate total monto using aggregate
         total_monto = GastosSeguridad.objects.filter(proyecto=proyecto).aggregate(total=Sum('monto'))['total'] or 0
 
+        # Calculate total iva using aggregate
+        total_iva = GastosSeguridad.objects.filter(proyecto=proyecto).aggregate(total=Sum('iva'))['total'] or 0
+
         # Add the total to the context
         context['total_monto'] = total_monto
+        context['total_iva'] = total_iva
         context['proyecto'] = proyecto
         return context 
 
@@ -177,14 +201,20 @@ def registro_operaciones_generico(request, slug, form_class, category_update, re
         if form.is_valid():
             gasto = form.save(commit=False)
             gasto.proyecto = proyecto
-            gasto.iva = gasto.monto * Decimal('0.16')
+            gasto.iva = (gasto.monto / Decimal('1.16')) * Decimal('0.16')
             gasto.save()
 
             # Actualizar el valor neto del proyecto (suma o resta según la categoría)
             if category_update == 'gasto':
-                Proyectos.objects.filter(id=proyecto.id).update(total=F('total') - gasto.monto)
+                Proyectos.objects.filter(id=proyecto.id).update(
+                    total=F('total') - gasto.monto,
+                    iva=F('iva') + gasto.iva
+                )
             elif category_update == 'ingreso':
-                Proyectos.objects.filter(id=proyecto.id).update(total=F('total') + gasto.monto)
+                Proyectos.objects.filter(id=proyecto.id).update(
+                    total=F('total') + gasto.monto,
+                    iva=F('iva') - gasto.iva
+                )
 
             # Redirige a la URL que se pasa como argumento
             return redirect(redirect_url, slug=slug)

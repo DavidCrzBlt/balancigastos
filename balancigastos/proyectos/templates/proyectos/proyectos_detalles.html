@@ -46,10 +46,13 @@
     <li class="list-group-item"><strong>Gastos generales:</strong> {{ gastos_generales|pesos }}</li>
     <li class="list-group-item"><strong>Gastos materiales:</strong> {{ gastos_materiales|pesos }}</li>
     <li class="list-group-item"><strong>Gastos mano de obra:</strong> {{ gastos_mano_obra|pesos }}</li>
+    <li class="list-group-item"><strong>Gastos seguridad:</strong> {{ gastos_seguridad|pesos }}</li>
     <li class="list-group-item"><strong>Gastos equipos:</strong> {{ gastos_equipos|pesos }}</li>
     <li class="list-group-item"><strong>Total Gastos:</strong> {{ total_gastos|pesos }}</li>
+    <li class="list-group-item"><strong>Total I.V.A. gastos: Calcular porque aún está pendiente</strong> {{ total_gastos|pesos }}</li>
     <hr class="border border-dark border-3 opacity-75">
     <li class="list-group-item"><strong>Resultado Neto:</strong> {{ neto|pesos }}</li>
+    <li class="list-group-item"><strong>I.V.A. Neto:</strong> {{ iva_neto|pesos }}</li>
   </ul>
   
   <div class="col-4">
