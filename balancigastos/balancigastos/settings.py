@@ -26,11 +26,15 @@ SECRET_KEY = 'django-insecure-94&dymsgth4hd)xc)o3+ld5ubkmv5ih3hq%c!a^phuto49_rcg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1','localhost']
 
 # Application definition
 
 INSTALLED_APPS = [
+    'equipos_y_vehiculos.apps.EquiposYVehiculosConfig',
+    'empleados.apps.EmpleadosConfig',
+    'contabilidad.apps.ContabilidadConfig',
+    'proyectos.apps.ProyectosConfig',
     'usuarios.apps.UsuariosConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -112,7 +116,7 @@ TIME_ZONE = 'America/Mexico_City'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -129,6 +133,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-LOGIN_REDIRECT_URL = ''
+LOGIN_REDIRECT_URL = 'proyectos:proyectos'
 
 LOGOUT_REDIRECT_URL = 'usuarios:login'
