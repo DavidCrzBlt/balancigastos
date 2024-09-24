@@ -201,7 +201,7 @@ def registro_operaciones_generico(request, slug, form_class, category_update, re
         if form.is_valid():
             gasto = form.save(commit=False)
             gasto.proyecto = proyecto
-            gasto.iva = (gasto.monto / Decimal('1.16')) * Decimal('0.16')
+            gasto.iva = gasto.monto * Decimal('0.16')
             gasto.save()
 
             # Actualizar el valor neto del proyecto (suma o resta según la categoría)

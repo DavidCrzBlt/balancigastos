@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Asistencias{% endblock %}
+{% load currency %}
+{% block content %}
+
+{% include 'navbar_profile.html' %}
+
+<h4 class="h4 text-center text-danger mt-3">Asistencias {{ proyecto }}</h4>
+
+<hr class="border border-danger border-3 opacity-75">
+
+{% if asistencias %}
+<div class="table-responsive">
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th scope="col">#</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Asistencia</th>
+            <th scope="col">Horas extras</th>
+         </tr>
+      </thead>
+      <tbody>
+         {% for asistencia in asistencias %}
+         <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ asistencia.empleado.rfc }}</td>
+            <td>{{ asistencia.fecha }}</td>
+            <td>{{ asistencia.asistencias }}</td>
+            <td>{{ asistencia.horas_extras }}</td>
+            
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+</div>
+{% endif %}
+
+{% endblock %}

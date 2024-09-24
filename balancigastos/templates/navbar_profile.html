@@ -34,8 +34,28 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'proyectos:proyectos' %}">Proyectos</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'empleados:empleados' %}">Empleados</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Empleados
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'empleados:empleados' %}">Empleados</a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'empleados:registro_empleados' %}">Registrar empleado</a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'empleados:registro_asistencias' %}">Registrar asistencias</a>
+                        </li>
+                    </ul>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>

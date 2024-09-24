@@ -1,11 +1,34 @@
 from django.shortcuts import render, redirect
-from .models import Empleados
+from .models import Empleados, Asistencias
 from proyectos.models import Proyectos
-from .forms import EmpleadosForm
+from .forms import EmpleadosForm, AsistenciaExcelForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
+from datetime import date, datetime
+from django.db.models import Q
+
+import openpyxl
+
 # Create your views here.
+
+class AsistenciasListView(LoginRequiredMixin,ListView):
+    model = Asistencias
+    template_name = "empleados/asistencias.html"
+    context_object_name = "asistencias"
+
+    def get_queryset(self):
+        slug = self.kwargs.get('slug')
+        proyecto = Proyectos.objects.get(slug=slug)
+        return Asistencias.objects.filter(proyecto=proyecto)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        slug = self.kwargs.get('slug')
+        proyecto = Proyectos.objects.get(slug=slug)
+
+        context['proyecto'] = proyecto
+        return context 
 
 class EmpleadosListView(LoginRequiredMixin,ListView):
     model = Empleados
@@ -69,3 +92,4 @@ def registro_empleados(request):
         empleados_form = EmpleadosForm()
 
     return render(request,'empleados/registrar_empleados.html',{'empleados_form':empleados_form,'empleados':empleados})
+

@@ -5,3 +5,6 @@ class EmpleadosForm(forms.ModelForm):
     class Meta:
         model = Empleados
         fields = ['nombres','apellido_paterno','apellido_materno','rfc','infonavit','imss']
+
+class AsistenciaExcelForm(forms.Form):
+    archivo_excel = forms.FileField()
