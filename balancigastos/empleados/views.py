@@ -107,11 +107,11 @@ def registro_asistencias(request):
             hoja_horas_extras = workbook['Horas Extras']
 
             # Extraer el proyecto desde la celda A1 de la hoja de asistencias
-            proyecto_id = hoja_asistencias['A1'].value
-            print(f"Proyecto ID: {proyecto_id}")  # Depuración
+            clave_proyecto = hoja_asistencias['B1'].value
+            print(f"Proyecto ID: {clave_proyecto}")  # Depuración
 
             try:
-                proyecto = Proyectos.objects.get(id=proyecto_id, estatus=True)
+                proyecto = Proyectos.objects.get(clave_proyecto=clave_proyecto, estatus=True)
                 print(f"Proyecto encontrado: {proyecto.proyecto}")  # Depuración
             except Proyectos.DoesNotExist:
                 print("El proyecto no existe o no está activo.")  # Depuración

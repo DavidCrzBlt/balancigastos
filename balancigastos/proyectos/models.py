@@ -6,7 +6,7 @@ from decimal import Decimal
 class Proyectos(models.Model):
 
     proyecto = models.CharField(max_length=255)
-    clave_proyecto = models.CharField(max_length=100)
+    clave_proyecto = models.CharField(max_length=100,unique=True)
     empresa = models.CharField(max_length=255)
     estatus = models.BooleanField(default=True)
     total = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
