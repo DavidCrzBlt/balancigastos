@@ -27,11 +27,26 @@ class Asistencias(models.Model):
 class Salario(models.Model):
     empleado = models.ForeignKey(Empleados,related_name="salario",on_delete=models.CASCADE)
     proyecto = models.ForeignKey(Proyectos,related_name="salario",on_delete=models.CASCADE)
-    asistencias = models.ForeignKey(Asistencias,related_name="salario",on_delete=models.CASCADE)
-    salario_base = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
     salario = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
     infonavit = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
     imss = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
-    isn = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
+    isr = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
     horas_extras = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
+    lote = models.IntegerField(editable=False)
+
+class Lote(models.Model):
+    creado_en = models.DateTimeField(auto_now_add=True)
+    proyecto = models.ForeignKey(Proyectos,related_name='lotes',on_delete=models.CASCADE)
+
+    @classmethod
+    def obtener_nuevo_lote(cls,proyecto):
+        try:
+            project = Proyectos.objects.get(proyecto=proyecto, estatus=True)
+            print(f"Proyecto encontrado: {proyecto.proyecto}")  # Depuración
+        except Proyectos.DoesNotExist:
+            print("El proyecto no existe o no está activo.")  # Depuración
+            raise ValueError("El proyecto no existe o no está activo.")
+            
+        nuevo_lote = cls.objects.create(proyecto=project)
+        return nuevo_lote  # El ID del objeto será nuestro número de lote.
     

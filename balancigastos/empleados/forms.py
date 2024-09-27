@@ -8,3 +8,6 @@ class EmpleadosForm(forms.ModelForm):
 
 class AsistenciaExcelForm(forms.Form):
     archivo_excel = forms.FileField()
+
+class NominasExcelForm(forms.Form):
+    archivo_excel = forms.FileField()

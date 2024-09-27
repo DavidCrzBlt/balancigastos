@@ -1,17 +1,40 @@
 from django.shortcuts import render, redirect
-from .models import Empleados, Asistencias
+from .models import Empleados, Asistencias, Salario, Lote
 from proyectos.models import Proyectos
-from .forms import EmpleadosForm, AsistenciaExcelForm
+from contabilidad.models import GastosManoObra
+from .forms import EmpleadosForm, AsistenciaExcelForm, NominasExcelForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from datetime import datetime, date
 from django.db.models import Q
 from decimal import Decimal
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 
 import openpyxl
 
 # Create your views here.
+
+class NominasListView(LoginRequiredMixin,ListView):
+    model = Salario
+    template_name = "empleados/nominas_list.html"
+    context_object_name = "nominas"
+
+    def get_queryset(self):
+        slug = self.kwargs.get('slug')
+        lote_id = self.kwargs.get('lote')
+        proyecto = Proyectos.objects.get(slug=slug)
+        lote = Lote.objects.get(id=lote_id)
+        return Salario.objects.filter(proyecto=proyecto,lote=lote.id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        slug = self.kwargs.get('slug')
+        proyecto = Proyectos.objects.get(slug=slug)
+        context['lote'] = self.kwargs.get('lote')
+        context['proyecto'] = proyecto
+        return context 
 
 class AsistenciasListView(LoginRequiredMixin,ListView):
     model = Asistencias
@@ -222,3 +245,117 @@ def convertir_fecha(fecha_excel):
     else:
         print(f"Error: formato de fecha no reconocido: {fecha_excel}")
         return None
+
+def registro_nominas(request,slug):
+    if request.method == 'POST':
+        form = NominasExcelForm(request.POST, request.FILES)
+        if form.is_valid():
+            archivo_excel = request.FILES['archivo_excel']
+            workbook = openpyxl.load_workbook(archivo_excel)
+
+            # Cargar las dos hojas: "Nóminas"
+            hoja_nominas = workbook['Nominas']
+
+            # Extraer el proyecto desde la celda B1 de la hoja de nóminas
+            # clave_proyecto = hoja_nominas['B1'].value
+            proyecto = Proyectos.objects.get(slug=slug)
+            clave_proyecto = proyecto.clave_proyecto
+            print(f"Proyecto ID: {clave_proyecto}")  # Depuración
+
+            try:
+                proyecto = Proyectos.objects.get(clave_proyecto=clave_proyecto, estatus=True)
+                print(f"Proyecto encontrado: {proyecto.proyecto}")  # Depuración
+            except Proyectos.DoesNotExist:
+                print("El proyecto no existe o no está activo.")  # Depuración
+                return render(request, 'error.html', {'mensaje': 'El proyecto no existe o no está activo.'})
+            
+            # Diccionario para almacenar los datos de nóminas y horas extras
+            diccionario_nominas = {
+                "empleado": [],
+                "salario": [],
+                "infonavit": [],
+                "imss": [],
+                "isr": [],
+                "horas_extras": []
+            }
+
+            # Procesar asistencias desde la hoja "Nóminas"
+            for fila in hoja_nominas.iter_rows(min_row=3, max_col=hoja_nominas.max_column, values_only=True):
+                nombre_empleado = fila[0]
+                try:
+                    empleado = Empleados.objects.get(rfc=nombre_empleado)
+                    # Asumimos que los datos están en las columnas correctas como se ve en la plantilla
+                    diccionario_nominas["empleado"].append(empleado)
+                    diccionario_nominas["salario"].append(Decimal(fila[1]))
+                    diccionario_nominas["infonavit"].append(Decimal(fila[2]))
+                    diccionario_nominas["imss"].append(Decimal(fila[3]))
+                    diccionario_nominas["isr"].append(Decimal(fila[4]))
+                    diccionario_nominas["horas_extras"].append(Decimal(fila[5]))
+                except Empleados.DoesNotExist:
+                    continue  # Si no existe el empleado, omitir
+            
+            # Crear una lista de objetos Nominas para usar en bulk_create
+            nuevo_lote = Lote.obtener_nuevo_lote(proyecto=proyecto)
+            nominas_a_crear = []
+            for i in range(len(diccionario_nominas["empleado"])):
+                nomina = Salario(
+                    empleado=diccionario_nominas["empleado"][i],
+                    proyecto=proyecto,
+                    salario=diccionario_nominas["salario"][i],
+                    infonavit=diccionario_nominas["infonavit"][i],
+                    imss=diccionario_nominas["imss"][i],
+                    isr=diccionario_nominas["isr"][i],
+                    horas_extras=diccionario_nominas["horas_extras"][i],
+                    lote=nuevo_lote.id 
+                    ) 
+                
+                nominas_a_crear.append(nomina)
+
+            Salario.objects.bulk_create(nominas_a_crear)
+
+            registro_gastos_mano_obra(proyecto,nuevo_lote.id)
+            
+            # Redirigir a la vista de asistencias del proyecto
+            return redirect('empleados:nominas', slug=proyecto.slug, lote=nuevo_lote.id)
+
+    else:
+        form = NominasExcelForm()
+
+    return render(request, 'empleados/registro_nominas.html',{'nominas_form':form})
+
+
+def registro_gastos_mano_obra(proyecto,lote):
+    nominas_result = Salario.objects.filter(lote=lote,proyecto=proyecto).aggregate(
+        total_nominas=Coalesce(Sum('salario'),Decimal('0.00'))
+    )
+    nominas=nominas_result['total_nominas']
+    infonavit_result = Salario.objects.filter(lote=lote,proyecto=proyecto).aggregate(
+        total_infonavit=Coalesce(Sum('infonavit'),Decimal('0.00'))
+    )
+    infonavit=infonavit_result['total_infonavit']
+    imss_result = Salario.objects.filter(lote=lote,proyecto=proyecto).aggregate(
+        total_imss=Coalesce(Sum('imss'),Decimal('0.00'))
+    )
+    imss=imss_result['total_imss']
+    isr_result = Salario.objects.filter(lote=lote,proyecto=proyecto).aggregate(
+        total_isr=Coalesce(Sum('isr'),Decimal('0.00'))
+    )
+    isr=isr_result['total_isr']
+    horas_extras_result = Salario.objects.filter(lote=lote,proyecto=proyecto).aggregate(
+        total_horas_extras=Coalesce(Sum('horas_extras'),Decimal('0.00'))
+    )
+    horas_extras=horas_extras_result['total_horas_extras']
+    
+    isn = Decimal('0.03') * nominas
+    total_monto = nominas + infonavit + imss + isr + horas_extras + isn
+
+    GastosManoObra.objects.create(
+        proyecto=proyecto,
+        nomina=nominas,
+        infonavit=infonavit,
+        imss=imss,
+        isn=isn,
+        isr=isr,
+        horas_extras=horas_extras,
+        monto=total_monto,
+    )

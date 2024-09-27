@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Registro de nóminas{% endblock %}
+
+{% block content %}
+
+{% include 'navbar_profile.html' %}
+
+<hr class="border border-danger border-3 opacity-75">
+
+<div class="container">
+    <form method="post" enctype="multipart/form-data">
+        <h4 class="h4 text-center text-danger">Registrar nóminas</h4>
+        {% csrf_token %}
+        {{ nominas_form.as_p }}
+        <button type="submit" class="btn btn-danger">Cargar nóminas</button>
+    </form>
+</div>
+
+{% endblock %}

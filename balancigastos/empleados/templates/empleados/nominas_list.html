@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Nóminas{% endblock %}
+{% load currency %}
+{% block content %}
+
+{% include 'navbar_profile.html' %}
+
+<h4 class="h4 text-center text-danger mt-3">Nóminas {{ proyecto }}</h4>
+
+<hr class="border border-danger border-3 opacity-75">
+
+{% if nominas %}
+<div class="table-responsive">
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th scope="col">#</th>
+            <th scope="col">RFC</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Nómina</th>
+            <th scope="col">INFONAVIT</th>
+            <th scope="col">IMSS</th>
+            <th scope="col">ISR</th>
+            <th scope="col">Horas extras</th>
+            <th scope="col">Lote</th>
+         </tr>
+      </thead>
+      <tbody>
+         {% for nomina in nominas %}
+         <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ nomina.empleado.rfc }}</td>
+            <td>{{ nomina.empleado.nombres }} {{ nomina.empleado.apellido_paterno }} {{ nomina.empleado.apellido_materno }}</td>
+            <td>{{ nomina.salario|pesos }}</td>
+            <td>{{ nomina.infonavit|pesos }}</td>
+            <td>{{ nomina.imss|pesos }}</td>
+            <td>{{ nomina.isr|pesos }}</td>
+            <td>{{ nomina.horas_extras|pesos }}</td>
+            <td>{{ nomina.lote}}</td>
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+</div>
+{% endif %}
+
+{% endblock %}
