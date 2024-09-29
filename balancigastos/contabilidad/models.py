@@ -3,7 +3,7 @@ from proyectos.models import Proyectos
 from equipos_y_vehiculos.models import Vehiculos
 from django.utils import timezone
 from decimal import Decimal
-
+from django.core.exceptions import ValidationError
 # Create your models here.
 
 class GastosVehiculos(models.Model):
@@ -17,6 +17,9 @@ class GastosVehiculos(models.Model):
     ubicacion = models.CharField(max_length=100,null=False)
     conductor = models.CharField(max_length=100,null=False)
     fecha = models.DateField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.proyecto.proyecto} - {self.vehiculo}"
     
 class GastosGenerales(models.Model):
     proyecto = models.ForeignKey(Proyectos, related_name= 'gastos_generales',on_delete=models.CASCADE)

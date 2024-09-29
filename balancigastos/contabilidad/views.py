@@ -7,6 +7,7 @@ from django.db.models import Sum, F
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from decimal import Decimal
+from django.contrib import messages
 
 # Create your views here.
 
@@ -193,6 +194,10 @@ def registro_operaciones_generico(request, slug, form_class, category_update, re
 
     # Obtén el proyecto usando el slug
     proyecto = Proyectos.objects.get(slug=slug)
+
+    if not proyecto.estatus:
+        messages.error(request, "No se pueden registrar operaciones para un proyecto inactivo.")
+        return redirect(redirect_url,slug=slug)
     
     if request.method == "POST":
         # Usa la clase de formulario que se pasa como argumento
