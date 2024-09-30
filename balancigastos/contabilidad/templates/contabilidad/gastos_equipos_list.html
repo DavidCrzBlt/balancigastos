@@ -67,6 +67,7 @@
                 <td>{{ gasto.iva|pesos }}</td>
                 <td>{{ gasto.fecha|date:"d-M-y" }}</td>
                 <td><a href="{% url 'contabilidad:editar_gastos_equipos' proyecto.slug gasto.id %}" class="btn btn-outline-danger">Editar</a></td>
+                <td><a href="{% url 'contabilidad:eliminar_gastos_equipos' proyecto.slug gasto.id %}" onclick="return confirm('¿Estás seguro de que quieres eliminar este gasto?');" class="btn btn-outline-danger">Eliminar</a></td>
             </tr>
             {% endfor %}
             <tr>

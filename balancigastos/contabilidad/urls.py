@@ -33,6 +33,12 @@ urlpatterns = [
 
     # Path de eliminaciones
     path("eliminar-gastos-mano-obra/<slug:slug>/<int:gasto_id>",views.eliminar_gastos_mano_obra,name="eliminar_gastos_mano_obra"),
+    path("eliminar-gastos-generales/<slug:slug>/<int:gasto_id>",views.eliminar_gastos_generales,name="eliminar_gastos_generales"),
+    path("eliminar-gastos-vehiculos/<slug:slug>/<int:gasto_id>",views.eliminar_gastos_vehiculos,name="eliminar_gastos_vehiculos"),
+    path("eliminar-gastos-materiales/<slug:slug>/<int:gasto_id>",views.eliminar_gastos_materiales,name="eliminar_gastos_materiales"),
+    path("eliminar-gastos-equipos/<slug:slug>/<int:gasto_id>",views.eliminar_gastos_equipos,name="eliminar_gastos_equipos"),
+    path("eliminar-gastos-seguridad/<slug:slug>/<int:gasto_id>",views.eliminar_gastos_seguridad,name="eliminar_gastos_seguridad"),
+    path("eliminar-ingresos/<slug:slug>/<int:gasto_id>",views.eliminar_ingresos,name="eliminar_ingresos"),
 
     
 ]

@@ -467,7 +467,7 @@ def eliminar_gastos_mano_obra(request,slug,gasto_id):
             slug=slug,
             modelo=GastosManoObra,
             instancia_id=gasto_id,
-            category_update='gasto',  # Indica que es un ingreso (se suma)
+            category_update='gasto', 
             redirect_url='contabilidad:gastos_mano_obra',  # URL a la que redirigir
         )
     
@@ -476,3 +476,69 @@ def eliminar_gastos_mano_obra(request,slug,gasto_id):
         messages.error(request, 'No se pueden hacer cambios a un proyecto inactivo.')
         # Redirigir a página de error
         return redirect('contabilidad:gastos_mano_obra',slug=slug)
+    
+@login_required
+def eliminar_gastos_generales(request, slug, gasto_id):
+    return eliminar_operaciones_generico(
+            request=request,
+            slug=slug,
+            modelo=GastosGenerales,
+            instancia_id=gasto_id,
+            category_update='gasto', 
+            redirect_url='contabilidad:gastos_generales',  # URL a la que redirigir
+        )
+
+@login_required
+def eliminar_gastos_equipos(request, slug, gasto_id):
+    return eliminar_operaciones_generico(
+            request=request,
+            slug=slug,
+            modelo=GastosEquipos,
+            instancia_id=gasto_id,
+            category_update='gasto',  
+            redirect_url='contabilidad:gastos_equipos',  # URL a la que redirigir
+        )
+
+@login_required
+def eliminar_gastos_materiales(request, slug, gasto_id):
+    return eliminar_operaciones_generico(
+            request=request,
+            slug=slug,
+            modelo=GastosMateriales,
+            instancia_id=gasto_id,
+            category_update='gasto',  
+            redirect_url='contabilidad:gastos_materiales',  # URL a la que redirigir
+        )
+
+@login_required
+def eliminar_gastos_seguridad(request, slug, gasto_id):
+    return eliminar_operaciones_generico(
+            request=request,
+            slug=slug,
+            modelo=GastosSeguridad,
+            instancia_id=gasto_id,
+            category_update='gasto',  
+            redirect_url='contabilidad:gastos_seguridad',  # URL a la que redirigir
+        )
+
+@login_required
+def eliminar_gastos_vehiculos(request, slug, gasto_id):
+    return eliminar_operaciones_generico(
+            request=request,
+            slug=slug,
+            modelo=GastosVehiculos,
+            instancia_id=gasto_id,
+            category_update='gasto',  
+            redirect_url='contabilidad:gastos_vehiculos',  # URL a la que redirigir
+        )
+
+@login_required
+def eliminar_ingresos(request, slug, gasto_id):
+    return eliminar_operaciones_generico(
+            request=request,
+            slug=slug,
+            modelo=Ingresos,
+            instancia_id=gasto_id,
+            category_update='ingreso', 
+            redirect_url='contabilidad:ingresos',  # URL a la que redirigir
+        )
