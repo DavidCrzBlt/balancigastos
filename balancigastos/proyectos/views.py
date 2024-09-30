@@ -3,7 +3,7 @@ from .forms import ProyectosForm
 from django.views.generic import ListView, DetailView
 from .models import Proyectos
 from contabilidad.models import Ingresos, GastosGenerales, GastosVehiculos, GastosMateriales, GastosManoObra, GastosEquipos, GastosSeguridad
-from empleados.models import Salario
+from empleados.models import Salario, Asistencias
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth.decorators import login_required
@@ -316,6 +316,14 @@ def export_project_details_to_excel(request, proyecto_slug):
     for gasto in gastos_equipos:
         fecha_gasto_equipos = gasto.fecha
         ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.tiempo_renta, gasto.monto, gasto.iva, gasto.descripcion, gasto.proveedor, fecha_gasto_equipos])
+
+    # Hoja de Asistencias
+    ws4 = wb.create_sheet(title='Asistencias')
+    headers4 = ['ID', 'Nombre', 'Fecha', 'Asistencia', 'Horas Extras']
+    ws4.append(headers4)
+    asistencias_list = Asistencias.objects.filter(proyecto=proyecto)
+    for asistencia in asistencias_list:
+        ws4.append([asistencia.id, asistencia.empleado.rfc, asistencia.fecha, asistencia.asistencias, asistencia.horas_extras])
 
     # Guarda el libro de trabajo en un buffer
     buffer = io.BytesIO()
