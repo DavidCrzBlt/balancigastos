@@ -13,3 +13,5 @@ __pycache__/
 
 #Archivo de settings.py
 balancigastos/balancigastos/settings.py
+
+db.sqlite3
