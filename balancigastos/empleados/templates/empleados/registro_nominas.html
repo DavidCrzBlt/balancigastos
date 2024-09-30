@@ -47,10 +47,12 @@
         {% csrf_token %}
         {{ nominas_form.as_p }}
         <button type="submit" class="btn btn-danger">Cargar nóminas</button>
+        {% load static %}
+        <a href="{% static 'documents/nominas_template.xlsx' %}" class="btn btn-outline-danger">Descargar
+            plantilla</a>
     </form>
 </div>
 
-{% load static %}
-<a href="{% static 'documents/nominas_template.xlsx' %}" class="btn btn-outline-danger mb-3">Descargar plantilla</a>
+
 
 {% endblock %}
