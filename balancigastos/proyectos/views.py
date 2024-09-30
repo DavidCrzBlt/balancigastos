@@ -3,6 +3,7 @@ from .forms import ProyectosForm
 from django.views.generic import ListView, DetailView
 from .models import Proyectos
 from contabilidad.models import Ingresos, GastosGenerales, GastosVehiculos, GastosMateriales, GastosManoObra, GastosEquipos, GastosSeguridad
+from empleados.models import Salario
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth.decorators import login_required
@@ -215,65 +216,106 @@ def export_project_details_to_excel(request, proyecto_slug):
 
     # Hoja de Ingresos
     ws2 = wb.create_sheet(title='Ingresos')
-    headers2 = ['ID', 'Concepto', 'Ingreso', 'Referencia', 'Fecha']
+    headers2 = ['ID', 'Concepto', 'Ingreso', 'IVA', 'Referencia', 'Fecha']
     ws2.append(headers2)
     ingresos = Ingresos.objects.filter(proyecto=proyecto)
     for ingreso in ingresos:
-        fecha_ingreso = ingreso.fecha.replace(tzinfo=None)
-        ws2.append([ingreso.id, ingreso.concepto, ingreso.ingreso, ingreso.referencia, fecha_ingreso])
+        fecha_ingreso = ingreso.fecha
+        ws2.append([ingreso.id, ingreso.concepto, ingreso.monto, ingreso.iva, ingreso.referencia, fecha_ingreso])
 
     # Hoja de Gastos Vehículos
     ws3 = wb.create_sheet(title='Gastos Vehículos')
-    headers3 = ['ID', 'Vehículo', 'Cantidad Combustible', 'Monto', 'Ubicación', 'Conductor', 'Fecha']
+    headers3 = ['ID', 'Vehículo', 'Cantidad Combustible', 'Monto', 'IVA', 'Ubicación', 'Proveedor', 'Conductor', 'Fecha']
     ws3.append(headers3)
     gastos_vehiculos = GastosVehiculos.objects.filter(proyecto=proyecto)
     for gasto in gastos_vehiculos:
-        fecha_gasto = gasto.fecha.replace(tzinfo=None)
+        fecha_gasto = gasto.fecha
         ws3.append([
             gasto.id,
             gasto.vehiculo.vehiculo,  # Extrae el nombre del vehículo
             gasto.cantidad_combustible,
             gasto.monto,
+            gasto.iva,
             gasto.ubicacion,
+            gasto.proveedor,
             gasto.conductor,
             fecha_gasto
         ])
 
     # Hoja de Gastos Generales
     ws4 = wb.create_sheet(title='Gastos Generales')
-    headers4 = ['ID', 'Concepto', 'Comprador', 'Monto Concepto', 'Descripción', 'Ubicación', 'Fecha']
+    headers4 = ['ID', 'Concepto', 'Comprador', 'Monto', 'IVA', 'Notas', 'Proveedor', 'Fecha']
     ws4.append(headers4)
     gastos_generales = GastosGenerales.objects.filter(proyecto=proyecto)
     for gasto in gastos_generales:
-        fecha_gasto_general = gasto.fecha.replace(tzinfo=None)
-        ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.monto_concepto, gasto.descripcion, gasto.ubicacion, fecha_gasto])
+        fecha_gasto = gasto.fecha
+        ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.monto, gasto.iva, gasto.notas, gasto.proveedor, fecha_gasto])
 
     # Hoja de Gastos Materiales
     ws4 = wb.create_sheet(title='Gastos Materiales')
-    headers4 = ['ID', 'Concepto', 'Comprador', 'Monto Concepto', 'Descripción', 'Proveedor', 'Fecha']
+    headers4 = ['ID', 'Concepto', 'Comprador', 'Monto', 'IVA', 'Descripción', 'Proveedor', 'Fecha']
     ws4.append(headers4)
     gastos_materiales = GastosMateriales.objects.filter(proyecto=proyecto)
     for gasto in gastos_materiales:
-        fecha_gasto_material = gasto.fecha.replace(tzinfo=None)
-        ws4.append([gasto.id, gasto.concepto_material, gasto.comprador, gasto.monto, gasto.descripcion, gasto.proveedor, fecha_gasto_material])
+        fecha_gasto_material = gasto.fecha
+        ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.monto, gasto.iva, gasto.descripcion, gasto.proveedor, fecha_gasto_material])
+
+    # Hoja de Gastos Seguridad
+    ws4 = wb.create_sheet(title='Gastos Seguridad')
+    headers4 = ['ID', 'Concepto', 'Comprador', 'Monto', 'IVA', 'Descripción', 'Proveedor', 'Fecha']
+    ws4.append(headers4)
+    gastos_seguridad = GastosSeguridad.objects.filter(proyecto=proyecto)
+    for gasto in gastos_seguridad:
+        fecha_gasto_seguridad = gasto.fecha
+        ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.monto, gasto.iva, gasto.descripcion, gasto.proveedor, fecha_gasto_seguridad])
 
     # Hoja de Gastos Mano de obra
     ws4 = wb.create_sheet(title='Gastos Mano de Obra')
-    headers4 = ['ID', 'Nómina', 'IMSS', 'INFONAVIT', 'ISN', 'ISR', 'Monto', 'Fecha']
+    headers4 = ['ID', 'Nómina', 'IMSS', 'INFONAVIT', 'ISN', 'ISR', 'Horas extras', 'Monto', 'Lote', 'Fecha']
     ws4.append(headers4)
     gastos_mano_obra = GastosManoObra.objects.filter(proyecto=proyecto)
     for gasto in gastos_mano_obra:
-        fecha_gasto_mano_obra = gasto.fecha.replace(tzinfo=None)
-        ws4.append([gasto.id, gasto.nomina, gasto.imss, gasto.infonavit, gasto.isn, gasto.isr, gasto.monto, fecha_gasto_mano_obra])
+        fecha_gasto_mano_obra = gasto.fecha
+        ws4.append([
+            gasto.id, 
+            gasto.nomina, 
+            gasto.imss, 
+            gasto.infonavit, 
+            gasto.isn, 
+            gasto.isr,
+            gasto.horas_extras, 
+            gasto.monto,
+            gasto.lote,
+            fecha_gasto_mano_obra])
+        
+    # Hoja de nóminas. Estas son una extensión de mano de obra
+    ws4 = wb.create_sheet(title='Gastos nóminas')
+    headers4 = ['ID', 'RFC', 'Nombres', 'Apellido paterno', 'Apellido materno', 'Salario', 'IMSS', 'INFONAVIT', 'ISR', 'Horas extras', 'Lote']
+    ws4.append(headers4)
+    salarios = Salario.objects.filter(proyecto=proyecto)
+    for salario in salarios:
+        ws4.append([
+            salario.id,
+            salario.empleado.rfc,
+            salario.empleado.nombres,
+            salario.empleado.apellido_paterno,
+            salario.empleado.apellido_materno,
+            salario.salario, 
+            salario.imss, 
+            salario.infonavit, 
+            salario.isr,
+            salario.horas_extras, 
+            salario.lote
+            ])
 
     # Hoja de Gastos de equipos
     ws4 = wb.create_sheet(title='Gastos Equipos')
-    headers4 = ['ID', 'Concepto', 'Comprador', 'Tiempo de renta', 'Monto', 'Descripción', 'Proveedor', 'Fecha']
+    headers4 = ['ID', 'Concepto', 'Comprador', 'Tiempo de renta', 'Monto', 'IVA', 'Descripción', 'Proveedor', 'Fecha']
     ws4.append(headers4)
     gastos_equipos = GastosEquipos.objects.filter(proyecto=proyecto)
     for gasto in gastos_equipos:
-        fecha_gasto_equipos = gasto.fecha.replace(tzinfo=None)
-        ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.tiempo_renta, gasto.monto_concepto, gasto.descripcion, gasto.proveedor, fecha_gasto_equipos])
+        fecha_gasto_equipos = gasto.fecha
+        ws4.append([gasto.id, gasto.concepto, gasto.comprador, gasto.tiempo_renta, gasto.monto, gasto.iva, gasto.descripcion, gasto.proveedor, fecha_gasto_equipos])
 
     # Guarda el libro de trabajo en un buffer
     buffer = io.BytesIO()

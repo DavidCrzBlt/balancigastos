@@ -69,6 +69,7 @@ class GastosManoObra(models.Model):
     isr = models.DecimalField(max_digits=10, decimal_places=2,null=False,default=Decimal('0.00'))
     horas_extras = models.DecimalField(max_digits=10, decimal_places=2,null=False, default=Decimal('0.00'))
     monto = models.DecimalField(max_digits=10, decimal_places=2,default=Decimal('0.00'))
+    lote = models.IntegerField(unique=True)
     fecha = models.DateField(default=timezone.now)
 
     def __str__(self):

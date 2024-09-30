@@ -60,6 +60,7 @@
                 <td>{{ gasto.monto|pesos }}</td>
                 <td>{{ gasto.iva|pesos }}</td>
                 <td>{{ gasto.fecha|date:"d-M-y" }}</td>
+                <td><a href="{% url 'contabilidad:editar_gastos_vehiculos' proyecto.slug gasto.id %}" class="btn btn-outline-danger">Editar</a></td>
             </tr>
             {% endfor %}
             <tr>

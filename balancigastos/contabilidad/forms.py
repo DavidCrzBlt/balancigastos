@@ -9,7 +9,7 @@ now = timezone.now().date()
 class GastosVehiculosForm(forms.ModelForm):
     class Meta:
         model = GastosVehiculos
-        fields = ['vehiculo','cantidad_combustible','monto','ubicacion','conductor','fecha']
+        fields = ['vehiculo','cantidad_combustible','monto','ubicacion', 'proveedor','conductor','fecha']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),  # Calendar widget for 'fecha'
         }

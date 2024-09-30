@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import GastosVehiculosForm, GastosGeneralesForm, GastosMaterialesForm, GastosManoObraForm, GastosSeguridadForm, GastosEquiposForm, IngresosForm
 from django.views.generic import ListView
 from .models import GastosVehiculos, GastosGenerales, GastosMateriales, GastosManoObra, GastosEquipos, GastosSeguridad, Ingresos
 from proyectos.models import Proyectos
+from empleados.models import Salario
 from django.db.models import Sum, F
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,6 +11,17 @@ from decimal import Decimal
 from django.contrib import messages
 
 # Create your views here.
+
+### Vistas de detalle de proyecto ------------------------------------------- ###
+### Funciones genéricas para registro, edición y eliminación de instancias--- ###
+### Funciones de registro y edición de instancias por tipo de gasto o ingreso ###
+### Funciones de eliminación de instancias ---------------------------------- ###
+
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
+# Se muestran todas las vistas de los detalles del proyecto
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
 
 class IngresosListView(LoginRequiredMixin,ListView):
     model = Ingresos
@@ -188,6 +200,12 @@ class GastosSeguridadListView(LoginRequiredMixin,ListView):
         context['total_iva'] = total_iva
         context['proyecto'] = proyecto
         return context 
+    
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
+# Escribimos dos funciones que vamos a reutilizar después
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
 
 @login_required
 def registro_operaciones_generico(request, slug, form_class, category_update, redirect_url,op_category,active_tab):
@@ -198,13 +216,11 @@ def registro_operaciones_generico(request, slug, form_class, category_update, re
     if not proyecto.estatus:
         messages.error(request, "No se pueden registrar operaciones para un proyecto inactivo.")
         return redirect(redirect_url,slug=slug)
-    
-    if request.method == "POST":
-        # Usa la clase de formulario que se pasa como argumento
-        form = form_class(request.POST)
 
-        if form.is_valid():
-            gasto = form.save(commit=False)
+    if request.method == "POST":
+
+        if form_class.is_valid():
+            gasto = form_class.save(commit=False)
             gasto.proyecto = proyecto
             gasto.iva = gasto.monto * Decimal('0.16')
             gasto.save()
@@ -223,62 +239,150 @@ def registro_operaciones_generico(request, slug, form_class, category_update, re
 
             # Redirige a la URL que se pasa como argumento
             return redirect(redirect_url, slug=slug)
-    
-    else:
-        form = form_class()
 
     # Renderiza el template correspondiente
-    return render(request, 'contabilidad/registrar_operaciones.html', {'operaciones_form': form, 'proyecto': proyecto,'categoria_operacion':op_category,'active_tab':active_tab})
+    return render(request, 'contabilidad/registrar_operaciones.html', {'operaciones_form': form_class,
+     'proyecto': proyecto,
+     'categoria_operacion':op_category,
+     'active_tab':active_tab})
 
-def registro_gastos_vehiculos(request,slug):
+@login_required
+def eliminar_operaciones_generico(request,slug,modelo,instancia_id,category_update,redirect_url):
+    # Obtener el proyecto
+    proyecto = get_object_or_404(Proyectos, slug=slug)
+
+    # Buscar el movimiento por ID
+    movimiento = get_object_or_404(modelo, id=instancia_id, proyecto=proyecto)
+
+    # Eliminar el movimiento
+    movimiento.delete()
+
+    # Para GastosManoObra no tiene IVA entonces hay que hacer una excepción
+    if modelo == GastosManoObra:
+        
+        Proyectos.objects.filter(id=proyecto.id).update(
+            total=F('total') + movimiento.monto
+            )
+    else:
+
+        # Actualizar el valor neto del proyecto (suma o resta según la categoría)
+        if category_update == 'ingreso':
+            Proyectos.objects.filter(id=proyecto.id).update(
+                total=F('total') - movimiento.monto,
+                iva=F('iva') + movimiento.iva
+                )
+        elif category_update == 'gasto':
+            Proyectos.objects.filter(id=proyecto.id).update(
+                total=F('total') + movimiento.monto,
+                iva=F('iva') - movimiento.iva
+                )
+
+    # Mostrar un mensaje de éxito
+    messages.success(request, 'El gasto ha sido eliminado exitosamente.')
+
+    # Redirigir a la lista de gastos o a la página que prefieras
+    return redirect(redirect_url, slug=slug)
+
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
+# A partir de aquí se registran los gastos e ingresos
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
+
+def registro_gastos_vehiculos(request,slug,gasto_id=None):
+
+    if gasto_id:
+        # Si se pasa un gasto_id, es una edición, se obtiene el gasto
+        gasto = get_object_or_404(GastosVehiculos, id=gasto_id)
+        form_class = GastosVehiculosForm(request.POST or None, instance=gasto)  # Precargar datos
+    else:
+        # Si no hay gasto_id, es un registro nuevo
+        form_class = GastosVehiculosForm(request.POST or None)
+
     return registro_operaciones_generico(
         request=request,
         slug=slug,
-        form_class=GastosVehiculosForm,    # Formulario de gastos de vehículos
+        form_class=form_class,    # Formulario de gastos de vehículos
         category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_vehiculos',  # URL a la que redirigir
         op_category='gastos de vehículos',  # Categoría de operación
         active_tab='vehiculos'
     )
 
-def registro_gastos_generales(request,slug):
+def registro_gastos_generales(request,slug,gasto_id=None):
+
+    if gasto_id:
+        # Si se pasa un gasto_id, es una edición, se obtiene el gasto
+        gasto = get_object_or_404(GastosGenerales, id=gasto_id)
+        form_class = GastosGeneralesForm(request.POST or None, instance=gasto)  # Precargar datos
+    else:
+        # Si no hay gasto_id, es un registro nuevo
+        form_class = GastosGeneralesForm(request.POST or None)
+
     return registro_operaciones_generico(
         request=request,
         slug=slug,
-        form_class=GastosGeneralesForm,    # Formulario de gastos generales
+        form_class=form_class,    # Formulario de gastos generales
         category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_generales',  # URL a la que redirigir
         op_category='gastos generales',  # Categoría de operación
         active_tab='generales'
     )
 
-def registro_gastos_materiales(request,slug):
+def registro_gastos_materiales(request,slug,gasto_id=None):
+
+    if gasto_id:
+        # Si se pasa un gasto_id, es una edición, se obtiene el gasto
+        gasto = get_object_or_404(GastosMateriales, id=gasto_id)
+        form_class = GastosMaterialesForm(request.POST or None, instance=gasto)  # Precargar datos
+    else:
+        # Si no hay gasto_id, es un registro nuevo
+        form_class = GastosMaterialesForm(request.POST or None)
+
     return registro_operaciones_generico(
         request=request,
         slug=slug,
-        form_class=GastosMaterialesForm,    # Formulario de gastos de materiales
+        form_class=form_class,    # Formulario de gastos de materiales
         category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_materiales',  # URL a la que redirigir
         op_category='gastos de materiales',  # Categoría de operación
         active_tab='materiales'
     )
 
-def registro_gastos_seguridad(request,slug):
+def registro_gastos_seguridad(request,slug,gasto_id=None):
+
+    if gasto_id:
+        # Si se pasa un gasto_id, es una edición, se obtiene el gasto
+        gasto = get_object_or_404(GastosSeguridad, id=gasto_id)
+        form_class = GastosSeguridadForm(request.POST or None, instance=gasto)  # Precargar datos
+    else:
+        # Si no hay gasto_id, es un registro nuevo
+        form_class = GastosSeguridadForm(request.POST or None)
+
     return registro_operaciones_generico(
         request=request,
         slug=slug,
-        form_class=GastosSeguridadForm,    # Formulario de gastos de seguridad
+        form_class=form_class,    # Formulario de gastos de seguridad
         category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_seguridad',  # URL a la que redirigir
         op_category='gastos de seguridad',  # Categoría de operación
         active_tab='seguridad'
     )
 
-def registro_gastos_equipos(request,slug):
+def registro_gastos_equipos(request,slug,gasto_id=None):
+
+    if gasto_id:
+        # Si se pasa un gasto_id, es una edición, se obtiene el gasto
+        gasto = get_object_or_404(GastosEquipos, id=gasto_id)
+        form_class = GastosEquiposForm(request.POST or None, instance=gasto)  # Precargar datos
+    else:
+        # Si no hay gasto_id, es un registro nuevo
+        form_class = GastosEquiposForm(request.POST or None)
+
     return registro_operaciones_generico(
         request=request,
         slug=slug,
-        form_class=GastosEquiposForm,    # Formulario de gastos de equipos
+        form_class=form_class,    # Formulario de gastos de equipos
         category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_equipos',  # URL a la que redirigir
         op_category='gastos equipos',  # Categoría de operación
@@ -296,13 +400,55 @@ def registro_gastos_mano_obra(request,slug):
         active_tab='mano_obra'
     )
 
-def registro_ingresos(request,slug):
+def registro_ingresos(request,slug,ingreso_id=None):
+
+    if ingreso_id:
+        # Si se pasa un ingreso_id, es una edición, se obtiene el gasto
+        gasto = get_object_or_404(Ingresos, id=ingreso_id)
+        form_class = IngresosForm(request.POST or None, instance=gasto)  # Precargar datos
+    else:
+        # Si no hay ingreso_id, es un registro nuevo
+        form_class = IngresosForm(request.POST or None)
+
     return registro_operaciones_generico(
         request=request,
         slug=slug,
-        form_class= IngresosForm,    # Formulario de ingresos
+        form_class=form_class,    # Formulario de ingresos
         category_update='ingreso',  # Indica que es un ingreso (se suma)
         redirect_url='contabilidad:ingresos',  # URL a la que redirigir
         op_category='ingresos',  # Categoría de operación
         active_tab='ingresos'
+    )
+
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
+# A partir de aquí se eliminan instancias de gastos o ingresos
+### ------------------------------------------------------------------------- ###
+### ------------------------------------------------------------------------- ###
+
+def eliminar_gastos_mano_obra(request,slug,gasto_id):
+
+    # También tenemos que eliminar los salarios de la tabla Salario en empleados
+    # Para eso necesitamos obtener el número de lote
+    gasto = GastosManoObra.objects.get(id=gasto_id) 
+    lote = gasto.lote
+    # Con el número de lote buscamos los salarios que vamos a eliminar
+    salarios_a_eliminar = Salario.objects.filter(lote=lote)
+
+    if salarios_a_eliminar.exists():
+        num_eliminados = salarios_a_eliminar.count()
+        salarios_a_eliminar.delete()
+        # Mostrar un mensaje de éxito con el número de instancias eliminadas
+        messages.success(request, f'Se han eliminado {num_eliminados} salarios del lote {lote} exitosamente.')
+    else:
+        # Mostrar un mensaje si no hay salarios asociados a ese lote
+        messages.warning(request, f'No se encontraron salarios asociados al lote {lote}.')
+
+    return eliminar_operaciones_generico(
+        request=request,
+        slug=slug,
+        modelo=GastosManoObra,
+        instancia_id=gasto_id,
+        category_update='gasto',  # Indica que es un ingreso (se suma)
+        redirect_url='contabilidad:gastos_mano_obra',  # URL a la que redirigir
     )
