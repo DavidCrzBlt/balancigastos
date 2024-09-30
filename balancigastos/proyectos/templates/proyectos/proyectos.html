@@ -59,6 +59,7 @@
             <th scope="col">#</th>
             <th scope="col">ID de proyecto</th>
             <th scope="col">Nombre de proyecto</th>
+            <th scope="col">Clave de proyecto</th>
             <th scope="col">Empresa</th>
             <th scope="col">Estatus</th>
             <th scope="col">Resultado</th>
@@ -70,6 +71,7 @@
             <th scope="row">{{ forloop.counter }}</th>
             <td>{{ project.id }}</td>
             <td><a href="{% url 'proyectos:detalles_proyecto' project.slug %}">{{ project.proyecto }}</a></td>
+            <td>{{ project.clave_proyecto }}</td>
             <td>{{ project.empresa }}</td>
             {% if project.estatus == True %}
             <td><a class="btn btn-outline-danger"
