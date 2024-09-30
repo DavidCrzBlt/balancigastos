@@ -4,6 +4,7 @@
         <div class="container">
             <a class="navbar-brand" href="{% url 'proyectos:proyectos' %}">
                 <img class="logo" src="{% static 'images/Cuatimar_logo.png' %}" alt="Logo" height="50px">
+                {{ username.user}}
             </a>
         </div>
         <div class="container">
@@ -48,12 +49,6 @@
                         </li>
                         <li>
                             <a class="dropdown-item" href="{% url 'empleados:registro_empleados' %}">Registrar empleado</a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{% url 'empleados:registro_asistencias' %}">Registrar asistencias</a>
                         </li>
                     </ul>
                 </li>

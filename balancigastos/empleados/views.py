@@ -203,8 +203,9 @@ def registro_empleados(request):
 
     return render(request,'empleados/registrar_empleados.html',{'empleados_form':empleados_form,'empleados':empleados})
 
-
-def registro_asistencias(request):
+@login_required
+def registro_asistencias(request,slug):
+    proyecto = Proyectos.objects.get(slug=slug)
     if request.method == 'POST':
         form = AsistenciaExcelForm(request.POST, request.FILES)
         if form.is_valid():
@@ -216,15 +217,25 @@ def registro_asistencias(request):
             hoja_horas_extras = workbook['Horas Extras']
 
             # Extraer el proyecto desde la celda A1 de la hoja de asistencias
-            clave_proyecto = hoja_asistencias['B1'].value
+            clave_proyecto_hoja_asistencias = hoja_asistencias['B1'].value
+            print(f"Proyecto ID: {clave_proyecto_hoja_asistencias}")  # Depuración
+            # Obtenemos el proyecto del slug de la url
+            proyecto = Proyectos.objects.get(slug=slug)
+            clave_proyecto = proyecto.clave_proyecto
             print(f"Proyecto ID: {clave_proyecto}")  # Depuración
+            
+            # Esto es para validar que el proyecto de la hoja de asistencias coincida con el de la plataforma
+            if not clave_proyecto_hoja_asistencias == clave_proyecto:
+                messages.error(request, f'El proyecto de la hoja no coincide con el de la aplicación')
+                return redirect('empleados:registro_asistencias',slug=slug)
 
             try:
                 proyecto = Proyectos.objects.get(clave_proyecto=clave_proyecto, estatus=True)
                 print(f"Proyecto encontrado: {proyecto.proyecto}")  # Depuración
             except Proyectos.DoesNotExist:
                 print("El proyecto no existe o no está activo.")  # Depuración
-                return render(request, 'error.html', {'mensaje': 'El proyecto no existe o no está activo.'})
+                messages.error(request, f'El proyecto no existe o no está activo')
+                return redirect('empleados:registro_asistencias',slug=slug)
 
             
             # Diccionario para almacenar los datos de asistencias y horas extras
@@ -308,8 +319,9 @@ def registro_asistencias(request):
     else:
         form = AsistenciaExcelForm()
 
-    return render(request, 'empleados/registrar_asistencias.html', {'asistencias_form': form})
+    return render(request, 'empleados/registrar_asistencias.html', {'asistencias_form': form,'proyecto':proyecto})
 
+@login_required
 def registro_nominas(request,slug):
     if request.method == 'POST':
         form = NominasExcelForm(request.POST, request.FILES)
@@ -330,16 +342,16 @@ def registro_nominas(request,slug):
             # Esto es para validar que el proyecto de la hoja de nóminas coincida con el de la plataforma
             if not clave_proyecto_hoja_nominas == clave_proyecto:
             
-                messages.warning(request, f'El proyecto de la hoja no coincide con el de la aplicación')
-
-                return render(request, 'error.html', {'mensaje': 'El proyecto de la hoja no coincide con el de la aplicación'})
+                messages.error(request, f'El proyecto de la hoja no coincide con el de la aplicación')
+                return redirect('empleados:registro_nominas',slug=slug)
 
             try:
                 proyecto = Proyectos.objects.get(clave_proyecto=clave_proyecto, estatus=True)
                 print(f"Proyecto encontrado: {proyecto.proyecto}")  # Depuración
             except Proyectos.DoesNotExist:
                 print("El proyecto no existe o no está activo.")  # Depuración
-                return render(request, 'error.html', {'mensaje': 'El proyecto no existe o no está activo.'})
+                messages.error(request, f'El proyecto no existe o no está activo')
+                return redirect('empleados:registro_nominas',slug=slug)
             
             # Diccionario para almacenar los datos de nóminas y horas extras
             diccionario_nominas = {
@@ -391,6 +403,7 @@ def registro_nominas(request,slug):
             return redirect('empleados:nominas', slug=proyecto.slug, lote=nuevo_lote.id)
 
     else:
+        proyecto = Proyectos.objects.get(slug=slug)
         form = NominasExcelForm()
 
-    return render(request, 'empleados/registro_nominas.html',{'nominas_form':form})
+    return render(request, 'empleados/registro_nominas.html',{'nominas_form':form,'proyecto':proyecto})

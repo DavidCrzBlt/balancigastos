@@ -251,44 +251,51 @@ def eliminar_operaciones_generico(request,slug,modelo,instancia_id,category_upda
     # Obtener el proyecto
     proyecto = get_object_or_404(Proyectos, slug=slug)
 
-    # Buscar el movimiento por ID
-    movimiento = get_object_or_404(modelo, id=instancia_id, proyecto=proyecto)
+    if proyecto.estatus == True:
 
-    # Eliminar el movimiento
-    movimiento.delete()
+        # Buscar el movimiento por ID
+        movimiento = get_object_or_404(modelo, id=instancia_id, proyecto=proyecto)
 
-    # Para GastosManoObra no tiene IVA entonces hay que hacer una excepción
-    if modelo == GastosManoObra:
-        
-        Proyectos.objects.filter(id=proyecto.id).update(
-            total=F('total') + movimiento.monto
-            )
+        # Eliminar el movimiento
+        movimiento.delete()
+
+        # Para GastosManoObra no tiene IVA entonces hay que hacer una excepción
+        if modelo == GastosManoObra:
+            
+            Proyectos.objects.filter(id=proyecto.id).update(
+                total=F('total') + movimiento.monto
+                )
+        else:
+
+            # Actualizar el valor neto del proyecto (suma o resta según la categoría)
+            if category_update == 'ingreso':
+                Proyectos.objects.filter(id=proyecto.id).update(
+                    total=F('total') - movimiento.monto,
+                    iva=F('iva') + movimiento.iva
+                    )
+            elif category_update == 'gasto':
+                Proyectos.objects.filter(id=proyecto.id).update(
+                    total=F('total') + movimiento.monto,
+                    iva=F('iva') - movimiento.iva
+                    )
+
+        # Mostrar un mensaje de éxito
+        messages.success(request, 'El gasto ha sido eliminado exitosamente.')
+
+        # Redirigir a la lista de gastos o a la página que prefieras
+        return redirect(redirect_url, slug=slug)
     else:
-
-        # Actualizar el valor neto del proyecto (suma o resta según la categoría)
-        if category_update == 'ingreso':
-            Proyectos.objects.filter(id=proyecto.id).update(
-                total=F('total') - movimiento.monto,
-                iva=F('iva') + movimiento.iva
-                )
-        elif category_update == 'gasto':
-            Proyectos.objects.filter(id=proyecto.id).update(
-                total=F('total') + movimiento.monto,
-                iva=F('iva') - movimiento.iva
-                )
-
-    # Mostrar un mensaje de éxito
-    messages.success(request, 'El gasto ha sido eliminado exitosamente.')
-
-    # Redirigir a la lista de gastos o a la página que prefieras
-    return redirect(redirect_url, slug=slug)
+        # Mostrar un mensaje de advertencia
+        messages.error(request, 'No se pueden hacer cambios a un proyecto inactivo.')
+        # Redirigir a página de error
+        return redirect(redirect_url,slug=slug)
 
 ### ------------------------------------------------------------------------- ###
 ### ------------------------------------------------------------------------- ###
 # A partir de aquí se registran los gastos e ingresos
 ### ------------------------------------------------------------------------- ###
 ### ------------------------------------------------------------------------- ###
-
+@login_required
 def registro_gastos_vehiculos(request,slug,gasto_id=None):
 
     if gasto_id:
@@ -309,6 +316,7 @@ def registro_gastos_vehiculos(request,slug,gasto_id=None):
         active_tab='vehiculos'
     )
 
+@login_required
 def registro_gastos_generales(request,slug,gasto_id=None):
 
     if gasto_id:
@@ -329,6 +337,7 @@ def registro_gastos_generales(request,slug,gasto_id=None):
         active_tab='generales'
     )
 
+@login_required
 def registro_gastos_materiales(request,slug,gasto_id=None):
 
     if gasto_id:
@@ -349,6 +358,7 @@ def registro_gastos_materiales(request,slug,gasto_id=None):
         active_tab='materiales'
     )
 
+@login_required
 def registro_gastos_seguridad(request,slug,gasto_id=None):
 
     if gasto_id:
@@ -369,6 +379,7 @@ def registro_gastos_seguridad(request,slug,gasto_id=None):
         active_tab='seguridad'
     )
 
+@login_required
 def registro_gastos_equipos(request,slug,gasto_id=None):
 
     if gasto_id:
@@ -389,6 +400,7 @@ def registro_gastos_equipos(request,slug,gasto_id=None):
         active_tab='equipos'
     )
 
+@login_required
 def registro_gastos_mano_obra(request,slug):
     return registro_operaciones_generico(
         request=request,
@@ -400,6 +412,7 @@ def registro_gastos_mano_obra(request,slug):
         active_tab='mano_obra'
     )
 
+@login_required
 def registro_ingresos(request,slug,ingreso_id=None):
 
     if ingreso_id:
@@ -426,29 +439,40 @@ def registro_ingresos(request,slug,ingreso_id=None):
 ### ------------------------------------------------------------------------- ###
 ### ------------------------------------------------------------------------- ###
 
+@login_required
 def eliminar_gastos_mano_obra(request,slug,gasto_id):
 
-    # También tenemos que eliminar los salarios de la tabla Salario en empleados
-    # Para eso necesitamos obtener el número de lote
-    gasto = GastosManoObra.objects.get(id=gasto_id) 
-    lote = gasto.lote
-    # Con el número de lote buscamos los salarios que vamos a eliminar
-    salarios_a_eliminar = Salario.objects.filter(lote=lote)
+    # Obtenemos el proyecto
+    proyecto = Proyectos.objects.get(slug=slug)
+    # No se pueden hacer cambios a proyectos inactivos
+    if proyecto.estatus == True:
+        # También tenemos que eliminar los salarios de la tabla Salario en empleados
+        # Para eso necesitamos obtener el número de lote
+        gasto = GastosManoObra.objects.get(id=gasto_id) 
+        lote = gasto.lote
+        # Con el número de lote buscamos los salarios que vamos a eliminar
+        salarios_a_eliminar = Salario.objects.filter(lote=lote)
 
-    if salarios_a_eliminar.exists():
-        num_eliminados = salarios_a_eliminar.count()
-        salarios_a_eliminar.delete()
-        # Mostrar un mensaje de éxito con el número de instancias eliminadas
-        messages.success(request, f'Se han eliminado {num_eliminados} salarios del lote {lote} exitosamente.')
+        if salarios_a_eliminar.exists():
+            num_eliminados = salarios_a_eliminar.count()
+            salarios_a_eliminar.delete()
+            # Mostrar un mensaje de éxito con el número de instancias eliminadas
+            messages.success(request, f'Se han eliminado {num_eliminados} salarios del lote {lote} exitosamente.')
+        else:
+            # Mostrar un mensaje si no hay salarios asociados a ese lote
+            messages.error(request, f'No se encontraron salarios asociados al lote {lote}.')
+
+        return eliminar_operaciones_generico(
+            request=request,
+            slug=slug,
+            modelo=GastosManoObra,
+            instancia_id=gasto_id,
+            category_update='gasto',  # Indica que es un ingreso (se suma)
+            redirect_url='contabilidad:gastos_mano_obra',  # URL a la que redirigir
+        )
+    
     else:
-        # Mostrar un mensaje si no hay salarios asociados a ese lote
-        messages.warning(request, f'No se encontraron salarios asociados al lote {lote}.')
-
-    return eliminar_operaciones_generico(
-        request=request,
-        slug=slug,
-        modelo=GastosManoObra,
-        instancia_id=gasto_id,
-        category_update='gasto',  # Indica que es un ingreso (se suma)
-        redirect_url='contabilidad:gastos_mano_obra',  # URL a la que redirigir
-    )
+        # Mostrar un mensaje de advertencia
+        messages.error(request, 'No se pueden hacer cambios a un proyecto inactivo.')
+        # Redirigir a página de error
+        return redirect('contabilidad:gastos_mano_obra',slug=slug)
