@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Detalles de proyecto{% endblock %}
+{% load currency %}
+{% block content %}
+
+{% include 'navbar_profile.html' %}
+
+<h2>Gráfica de Estadísticas del Proyecto</h2>
+    
+    <div id="grafica" style="width:600px;height:400px;"></div>
+    
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <script type="text/javascript">
+        var graph = JSON.parse('{{ graph_json|escapejs }}');
+        Plotly.newPlot('grafica', graph.data, graph.layout);
+    </script>
+
+{% endblock %}

@@ -45,8 +45,14 @@
   <ul class="list-group col-4">
     <li class="list-group-item text-center"><strong>Ingresos</strong></li>
     <hr class="border border-danger border-3 opacity-75">
-    <li class="list-group-item list-group-item-primary"><strong>Ingresos Totales:</strong> {{ total_ingresos|pesos }}</li>
+    <li class="list-group-item list-group-item-primary"><strong>Ingresos Totales:</strong> {{ total_ingresos|pesos }}
+    </li>
     <li class="list-group-item"><strong>Ingresos Totales IVA:</strong> {{ total_iva_ingresos|pesos }}</li>
+
+    
+      <a href="{% url 'proyectos:export_project_details_to_excel' object.slug %}" class="btn btn-danger m-5">Descargar
+        proyecto en Excel</a>
+    
   </ul>
 
   <ul class="list-group col-4">
@@ -74,9 +80,16 @@
 
 </div>
 
-<div class="col-4 mb-5">
-  <a href="{% url 'proyectos:export_project_details_to_excel' object.slug %}" class="btn btn-danger">Descargar
-    proyecto en Excel</a>
+
+
+<div class="container mt-2">
+  
+  <div id="grafica" style="width:600px;height:400px;"></div>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script type="text/javascript">
+    var graph = JSON.parse('{{ graph_json|escapejs }}');
+    Plotly.newPlot('grafica', graph.data, graph.layout);
+  </script>
 </div>
 {% endif %}
 
