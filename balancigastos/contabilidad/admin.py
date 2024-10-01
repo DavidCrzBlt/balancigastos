@@ -44,7 +44,7 @@ class GastosMaterialesAdmin(admin.ModelAdmin):
         'comprador',
         'monto',
         'iva',
-        'notas',
+        'descripcion',
         'proveedor',
         'fecha'
     ]
