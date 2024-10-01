@@ -94,10 +94,10 @@ WSGI_APPLICATION = 'balancigastos.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'NAME_DATABASE',
-        'USER': 'USER_DATABASE',
-        'PASSWORD': 'PASSWORD_DATABASE',
-        'HOST': 'HOST_DATABASE',
+        'NAME': os.getenv('NAME_DATABASE'),
+        'USER': os.getenv('USER_DATABASE'),
+        'PASSWORD': os.getenv('PASSWORD_DATABASE'),
+        'HOST': os.getenv('HOST_DATABASE'),
         'PORT': '3306',
     }
 }
