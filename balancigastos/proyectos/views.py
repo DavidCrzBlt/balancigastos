@@ -4,6 +4,7 @@ from django.views.generic import ListView, DetailView
 from .models import Proyectos
 from contabilidad.models import Ingresos, GastosGenerales, GastosVehiculos, GastosMateriales, GastosManoObra, GastosEquipos, GastosSeguridad
 from empleados.models import Salario, Asistencias
+from contabilidad.views import recalcular_totales_proyecto
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth.decorators import login_required
@@ -77,72 +78,12 @@ class ProyectosDetailView(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
         proyecto = self.get_object()
 
-        ingresos_result = Ingresos.objects.filter(proyecto=proyecto).aggregate(
-            total_ingresos=Coalesce(Sum('monto'),Decimal('0.00')),
-            total_iva = Coalesce(Sum('iva'),Decimal('0.00'))
-            )
-        ingresos = ingresos_result['total_ingresos'] 
-        iva_ingresos = ingresos_result['total_iva']
+        # Llamar a la función recalcular_totales_proyecto que está en views.py de contabilidad
+        totales = recalcular_totales_proyecto(proyecto.id)
 
-        gastos_vehiculos_result = GastosVehiculos.objects.filter(proyecto=proyecto).aggregate(
-            total_gastos_vehiculos=Coalesce(Sum('monto'),Decimal('0.00')),
-            total_iva_vehiculos = Coalesce(Sum('iva'),Decimal('0.00'))
-            )
-        gastos_vehiculos = gastos_vehiculos_result['total_gastos_vehiculos']
-        iva_vehiculos = gastos_vehiculos_result['total_iva_vehiculos']
+        # Añadir los valores recalculados al contexto
+        context.update(totales)
 
-        gastos_generales_result = GastosGenerales.objects.filter(proyecto=proyecto).aggregate(
-            total_gastos_generales=Coalesce(Sum('monto'),Decimal('0.00')),
-            total_iva_generales=Coalesce(Sum('iva'),Decimal('0.00'))
-            )
-        gastos_generales = gastos_generales_result['total_gastos_generales'] 
-        iva_generales = gastos_generales_result['total_iva_generales'] 
-
-        gastos_materiales_result = GastosMateriales.objects.filter(proyecto=proyecto).aggregate(
-            total_gastos_materiales=Coalesce(Sum('monto'),Decimal('0.00')),
-            total_iva_materiales=Coalesce(Sum('iva'),Decimal('0.00'))
-            )
-        gastos_materiales = gastos_materiales_result['total_gastos_materiales'] 
-        iva_materiales = gastos_materiales_result['total_iva_materiales'] 
-
-        gastos_seguridad_result = GastosSeguridad.objects.filter(proyecto=proyecto).aggregate(
-            total_gastos_seguridad=Coalesce(Sum('monto'),Decimal('0.00')),
-            total_iva_seguridad=Coalesce(Sum('iva'),Decimal('0.00'))
-            )
-        gastos_seguridad = gastos_seguridad_result['total_gastos_seguridad']
-        iva_seguridad = gastos_seguridad_result['total_iva_seguridad']
-
-        gastos_mano_obra_result = GastosManoObra.objects.filter(proyecto=proyecto).aggregate(total_gastos_mano_obra=Coalesce(Sum('monto'),Decimal('0.00')))
-        gastos_mano_obra = gastos_mano_obra_result['total_gastos_mano_obra'] 
-
-        gastos_equipos_result = GastosEquipos.objects.filter(proyecto=proyecto).aggregate(
-            total_gastos_equipos=Coalesce(Sum('monto'),Decimal('0.00')),
-            total_iva_equipos=Coalesce(Sum('iva'),Decimal('0.00'))
-            )
-        gastos_equipos = gastos_equipos_result['total_gastos_equipos'] 
-        iva_equipos = gastos_equipos_result['total_iva_equipos'] 
-
-        # Add the numerical results
-        total_gastos = gastos_vehiculos + gastos_generales + gastos_materiales + gastos_mano_obra + gastos_equipos + gastos_seguridad
-
-        total_iva_gastos = iva_vehiculos + iva_generales + iva_materiales + iva_equipos + iva_seguridad
-
-        total_neto = proyecto.total
-        iva_neto = proyecto.iva
-
-        # Add values to the context
-        context['ingresos'] = ingresos
-        context['iva_ingresos'] = iva_ingresos
-        context['gastos_vehiculos'] = gastos_vehiculos
-        context['gastos_generales'] = gastos_generales
-        context['gastos_materiales'] = gastos_materiales
-        context['gastos_seguridad'] = gastos_seguridad
-        context['gastos_mano_obra'] = gastos_mano_obra
-        context['gastos_equipos'] = gastos_equipos
-        context['total_gastos'] = total_gastos
-        context['total_iva_gastos'] = total_iva_gastos
-        context['neto'] = total_neto
-        context['iva_neto'] = iva_neto
         return context
 
 @login_required
