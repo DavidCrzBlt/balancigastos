@@ -25,15 +25,7 @@ class SalarioAdmin(admin.ModelAdmin):
         'lote'
     ]
 
-class AsistenciasAdmin(admin.ModelAdmin):
-    list_display = [
-        'empleado',
-        'proyecto',
-        'asistencias',
-        'horas_extras',
-        'fecha'
-    ]
 
 admin.site.register(Empleados,EmpleadosAdmin)
-admin.site.register(Asistencias,AsistenciasAdmin)
+
 admin.site.register(Salario,SalarioAdmin)
