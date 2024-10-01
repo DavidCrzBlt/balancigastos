@@ -252,6 +252,7 @@ def registro_asistencias(request,slug):
                 try:
                     empleado = Empleados.objects.get(rfc=nombre_empleado)
                 except Empleados.DoesNotExist:
+                    messages.error(request, f'Alguno de los empleados no existe')
                     continue  # Si no existe el empleado, omitir
 
                 for idx, valor in enumerate(fila[1:], start=1):
