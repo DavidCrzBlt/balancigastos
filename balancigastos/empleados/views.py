@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Empleados, Asistencias, Salario, Lote
 from proyectos.models import Proyectos
 from contabilidad.models import GastosManoObra
@@ -409,3 +409,19 @@ def registro_nominas(request,slug):
         form = NominasExcelForm()
 
     return render(request, 'empleados/registro_nominas.html',{'nominas_form':form,'proyecto':proyecto})
+
+### -------------------------------------------------------------------------- ###
+### ------------------ Funciones de eliminación ------------------------------ ###
+### -------------------------------------------------------------------------- ###
+
+def eliminar_empleado(request,empleado_id):
+    empleado = get_object_or_404(Empleados,id=empleado_id)
+    empleado.delete()
+    messages.success(request, 'El empleado ha sido eliminado exitosamente.')
+    return redirect('empleados:empleados')
+
+def eliminar_asistencia(request,asistencia_id,slug):
+    asistencia = get_object_or_404(Asistencias,id=asistencia_id)
+    asistencia.delete()
+    messages.success(request, 'La asistencia ha sido eliminado exitosamente.')
+    return redirect('empleados:asistencias',slug=slug)

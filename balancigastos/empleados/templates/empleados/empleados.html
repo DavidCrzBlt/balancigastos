@@ -77,6 +77,7 @@
             <td>{{ empleado.rfc }}</td>
             <td>{{ empleado.imss }}</td>
             <td>{{ empleado.infonavit }}</td>
+            <td><a href="{% url 'empleados:eliminar_empleado' empleado.id %}" onclick="return confirm('¿Estás seguro de que quieres eliminar este empleado?');" class="btn btn-outline-danger">Eliminar</a></td>
             
          </tr>
          {% endfor %}

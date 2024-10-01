@@ -64,7 +64,7 @@
             <td>{{ asistencia.fecha }}</td>
             <td>{{ asistencia.asistencias }}</td>
             <td>{{ asistencia.horas_extras }}</td>
-            
+            <td><a href="{% url 'empleados:eliminar_asistencia' proyecto.slug asistencia.id %}" onclick="return confirm('¿Estás seguro de que quieres eliminar esta asistencia?');" class="btn btn-outline-danger">Eliminar</a></td>
          </tr>
          {% endfor %}
       </tbody>
