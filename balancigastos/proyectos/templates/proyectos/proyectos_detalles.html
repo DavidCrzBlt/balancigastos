@@ -45,14 +45,14 @@
   <ul class="list-group col-4">
     <li class="list-group-item text-center"><strong>Ingresos</strong></li>
     <hr class="border border-danger border-3 opacity-75">
-    <li class="list-group-item"><strong>Ingresos Totales:</strong> {{ ingresos|pesos }}</li>
-    <li class="list-group-item"><strong>Ingresos Totales IVA:</strong> {{ iva_ingresos|pesos }}</li>
+    <li class="list-group-item list-group-item-primary"><strong>Ingresos Totales:</strong> {{ total_ingresos|pesos }}</li>
+    <li class="list-group-item"><strong>Ingresos Totales IVA:</strong> {{ total_iva_ingresos|pesos }}</li>
   </ul>
 
   <ul class="list-group col-4">
     <li class="list-group-item text-center"><strong>Egresos</strong></li>
     <hr class="border border-danger border-3 opacity-75">
-    <li class="list-group-item"><strong>Gastos totales:</strong> {{ total_gastos|pesos }}</li>
+    <li class="list-group-item list-group-item-primary"><strong>Gastos totales:</strong> {{ total_gastos|pesos }}</li>
     <li class="list-group-item"><strong>Gastos vehículos:</strong> {{ gastos_vehiculos|pesos }} </li>
     <li class="list-group-item"><strong>Gastos generales:</strong> {{ gastos_generales|pesos }} </li>
     <li class="list-group-item"><strong>Gastos materiales:</strong> {{ gastos_materiales|pesos }} </li>
@@ -68,7 +68,7 @@
     <li class="list-group-item"><strong>Empresa:</strong> {{ object.empresa }}</li>
     <li class="list-group-item"><strong>Estatus:</strong>{% if object.estatus == True %} Activo {% else %} Inactivo
       {% endif %}</li>
-    <li class="list-group-item"><strong>Resultado Neto:</strong> {{ neto|pesos }}</li>
+    <li class="list-group-item list-group-item-primary"><strong>Resultado Neto:</strong> {{ total_neto|pesos }}</li>
     <li class="list-group-item"><strong>I.V.A. Neto:</strong> {{ iva_neto|pesos }}</li>
   </ul>
 

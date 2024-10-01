@@ -5,6 +5,7 @@ from .models import GastosVehiculos, GastosGenerales, GastosMateriales, GastosMa
 from proyectos.models import Proyectos
 from empleados.models import Salario
 from django.db.models import Sum, F
+from django.db.models.functions import Coalesce
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from decimal import Decimal
@@ -207,8 +208,93 @@ class GastosSeguridadListView(LoginRequiredMixin,ListView):
 ### ------------------------------------------------------------------------- ###
 ### ------------------------------------------------------------------------- ###
 
+# Recalcular los totales de ingresos y gastos para el proyecto
+def recalcular_totales_proyecto(proyecto_id):
+    proyecto = Proyectos.objects.get(id=proyecto_id)
+
+    ingresos_result = Ingresos.objects.filter(proyecto=proyecto).aggregate(
+        total_ingresos=Coalesce(Sum('monto'),Decimal('0.00')),
+        total_iva = Coalesce(Sum('iva'),Decimal('0.00'))
+        )
+    total_ingresos = ingresos_result['total_ingresos'] 
+    total_iva_ingresos = ingresos_result['total_iva']
+
+    gastos_vehiculos_result = GastosVehiculos.objects.filter(proyecto=proyecto).aggregate(
+        total_gastos_vehiculos=Coalesce(Sum('monto'),Decimal('0.00')),
+        total_iva_vehiculos = Coalesce(Sum('iva'),Decimal('0.00'))
+        )
+    gastos_vehiculos = gastos_vehiculos_result['total_gastos_vehiculos']
+    iva_vehiculos = gastos_vehiculos_result['total_iva_vehiculos']
+
+    gastos_generales_result = GastosGenerales.objects.filter(proyecto=proyecto).aggregate(
+        total_gastos_generales=Coalesce(Sum('monto'),Decimal('0.00')),
+        total_iva_generales=Coalesce(Sum('iva'),Decimal('0.00'))
+        )
+    gastos_generales = gastos_generales_result['total_gastos_generales'] 
+    iva_generales = gastos_generales_result['total_iva_generales'] 
+
+    gastos_materiales_result = GastosMateriales.objects.filter(proyecto=proyecto).aggregate(
+        total_gastos_materiales=Coalesce(Sum('monto'),Decimal('0.00')),
+        total_iva_materiales=Coalesce(Sum('iva'),Decimal('0.00'))
+        )
+    gastos_materiales = gastos_materiales_result['total_gastos_materiales'] 
+    iva_materiales = gastos_materiales_result['total_iva_materiales'] 
+
+    gastos_seguridad_result = GastosSeguridad.objects.filter(proyecto=proyecto).aggregate(
+        total_gastos_seguridad=Coalesce(Sum('monto'),Decimal('0.00')),
+        total_iva_seguridad=Coalesce(Sum('iva'),Decimal('0.00'))
+        )
+    gastos_seguridad = gastos_seguridad_result['total_gastos_seguridad']
+    iva_seguridad = gastos_seguridad_result['total_iva_seguridad']
+
+    gastos_mano_obra_result = GastosManoObra.objects.filter(proyecto=proyecto).aggregate(total_gastos_mano_obra=Coalesce(Sum('monto'),Decimal('0.00')))
+    gastos_mano_obra = gastos_mano_obra_result['total_gastos_mano_obra'] 
+
+    gastos_equipos_result = GastosEquipos.objects.filter(proyecto=proyecto).aggregate(
+        total_gastos_equipos=Coalesce(Sum('monto'),Decimal('0.00')),
+        total_iva_equipos=Coalesce(Sum('iva'),Decimal('0.00'))
+        )
+    gastos_equipos = gastos_equipos_result['total_gastos_equipos'] 
+    iva_equipos = gastos_equipos_result['total_iva_equipos'] 
+
+    # Add the numerical results
+    total_gastos = gastos_vehiculos + gastos_generales + gastos_materiales + gastos_mano_obra + gastos_equipos + gastos_seguridad
+
+    total_iva_gastos = iva_vehiculos + iva_generales + iva_materiales + iva_equipos + iva_seguridad
+
+    # Actualizar el proyecto con los nuevos valores
+    total_neto = total_ingresos - total_gastos
+    iva_neto = total_iva_ingresos - total_iva_gastos
+
+    # Actualizar el proyecto con los nuevos valores
+    proyecto.total = total_neto
+    proyecto.iva = iva_neto
+    proyecto.save()
+
+    # Retornar un diccionario con los valores calculados
+    return {
+        'total_ingresos': total_ingresos,
+        'total_iva_ingresos': total_iva_ingresos,
+        'total_gastos': total_gastos,
+        'total_iva_gastos': total_iva_gastos,
+        'gastos_vehiculos':gastos_vehiculos,
+        'iva_vehiculos':iva_vehiculos,
+        'gastos_generales':gastos_generales,
+        'iva_generales':iva_generales,
+        'gastos_materiales':gastos_materiales,
+        'iva_materiales':iva_materiales,
+        'gastos_seguridad':gastos_seguridad,
+        'iva_seguridad':iva_seguridad,
+        'gastos_equipos':gastos_equipos,
+        'iva_equipos':iva_equipos,
+        'gastos_mano_obra':gastos_mano_obra,
+        'total_neto': total_neto,
+        'iva_neto': iva_neto
+    }
+
+
 @login_required
-def registro_operaciones_generico(request, slug, form_class, category_update, redirect_url,op_category,active_tab):
+def registro_operaciones_generico(request, slug, form_class, redirect_url,op_category,active_tab):
 
     # Obtén el proyecto usando el slug
     proyecto = Proyectos.objects.get(slug=slug)
@@ -226,16 +312,7 @@ def registro_operaciones_generico(request, slug, form_class, category_update, re
             gasto.save()
 
             # Actualizar el valor neto del proyecto (suma o resta según la categoría)
-            if category_update == 'gasto':
-                Proyectos.objects.filter(id=proyecto.id).update(
-                    total=F('total') - gasto.monto,
-                    iva=F('iva') + gasto.iva
-                )
-            elif category_update == 'ingreso':
-                Proyectos.objects.filter(id=proyecto.id).update(
-                    total=F('total') + gasto.monto,
-                    iva=F('iva') - gasto.iva
-                )
+            recalcular_totales_proyecto(proyecto.id)
 
             # Redirige a la URL que se pasa como argumento
             return redirect(redirect_url, slug=slug)
@@ -247,7 +324,7 @@ def registro_operaciones_generico(request, slug, form_class, category_update, re
      'active_tab':active_tab})
 
 @login_required
-def eliminar_operaciones_generico(request,slug,modelo,instancia_id,category_update,redirect_url):
+def eliminar_operaciones_generico(request,slug,modelo,instancia_id,redirect_url):
     # Obtener el proyecto
     proyecto = get_object_or_404(Proyectos, slug=slug)
 
@@ -259,25 +336,8 @@ def eliminar_operaciones_generico(request,slug,modelo,instancia_id,category_upda
         # Eliminar el movimiento
         movimiento.delete()
 
-        # Para GastosManoObra no tiene IVA entonces hay que hacer una excepción
-        if modelo == GastosManoObra:
-            
-            Proyectos.objects.filter(id=proyecto.id).update(
-                total=F('total') + movimiento.monto
-                )
-        else:
-
-            # Actualizar el valor neto del proyecto (suma o resta según la categoría)
-            if category_update == 'ingreso':
-                Proyectos.objects.filter(id=proyecto.id).update(
-                    total=F('total') - movimiento.monto,
-                    iva=F('iva') + movimiento.iva
-                    )
-            elif category_update == 'gasto':
-                Proyectos.objects.filter(id=proyecto.id).update(
-                    total=F('total') + movimiento.monto,
-                    iva=F('iva') - movimiento.iva
-                    )
+        # Actualizar el valor neto del proyecto (suma o resta según la categoría)
+        recalcular_totales_proyecto(proyecto.id)
 
         # Mostrar un mensaje de éxito
         messages.success(request, 'El gasto ha sido eliminado exitosamente.')
@@ -310,7 +370,6 @@ def registro_gastos_vehiculos(request,slug,gasto_id=None):
         request=request,
         slug=slug,
         form_class=form_class,    # Formulario de gastos de vehículos
-        category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_vehiculos',  # URL a la que redirigir
         op_category='gastos de vehículos',  # Categoría de operación
         active_tab='vehiculos'
@@ -331,7 +390,6 @@ def registro_gastos_generales(request,slug,gasto_id=None):
         request=request,
         slug=slug,
         form_class=form_class,    # Formulario de gastos generales
-        category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_generales',  # URL a la que redirigir
         op_category='gastos generales',  # Categoría de operación
         active_tab='generales'
@@ -352,7 +410,6 @@ def registro_gastos_materiales(request,slug,gasto_id=None):
         request=request,
         slug=slug,
         form_class=form_class,    # Formulario de gastos de materiales
-        category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_materiales',  # URL a la que redirigir
         op_category='gastos de materiales',  # Categoría de operación
         active_tab='materiales'
@@ -373,7 +430,6 @@ def registro_gastos_seguridad(request,slug,gasto_id=None):
         request=request,
         slug=slug,
         form_class=form_class,    # Formulario de gastos de seguridad
-        category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_seguridad',  # URL a la que redirigir
         op_category='gastos de seguridad',  # Categoría de operación
         active_tab='seguridad'
@@ -394,7 +450,6 @@ def registro_gastos_equipos(request,slug,gasto_id=None):
         request=request,
         slug=slug,
         form_class=form_class,    # Formulario de gastos de equipos
-        category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_equipos',  # URL a la que redirigir
         op_category='gastos equipos',  # Categoría de operación
         active_tab='equipos'
@@ -406,7 +461,6 @@ def registro_gastos_mano_obra(request,slug):
         request=request,
         slug=slug,
         form_class=GastosManoObraForm,    # Formulario de gastos de mano de obra
-        category_update='gasto',  # Indica que es un gasto (se resta)
         redirect_url='contabilidad:gastos_mano_obra',  # URL a la que redirigir
         op_category='gastos mano de obra',  # Categoría de operación
         active_tab='mano_obra'
@@ -427,7 +481,6 @@ def registro_ingresos(request,slug,ingreso_id=None):
         request=request,
         slug=slug,
         form_class=form_class,    # Formulario de ingresos
-        category_update='ingreso',  # Indica que es un ingreso (se suma)
         redirect_url='contabilidad:ingresos',  # URL a la que redirigir
         op_category='ingresos',  # Categoría de operación
         active_tab='ingresos'
@@ -467,7 +520,6 @@ def eliminar_gastos_mano_obra(request,slug,gasto_id):
             slug=slug,
             modelo=GastosManoObra,
             instancia_id=gasto_id,
-            category_update='gasto', 
             redirect_url='contabilidad:gastos_mano_obra',  # URL a la que redirigir
         )
     
@@ -484,7 +536,6 @@ def eliminar_gastos_generales(request, slug, gasto_id):
             slug=slug,
             modelo=GastosGenerales,
             instancia_id=gasto_id,
-            category_update='gasto', 
             redirect_url='contabilidad:gastos_generales',  # URL a la que redirigir
         )
 
@@ -495,7 +546,6 @@ def eliminar_gastos_equipos(request, slug, gasto_id):
             slug=slug,
             modelo=GastosEquipos,
             instancia_id=gasto_id,
-            category_update='gasto',  
             redirect_url='contabilidad:gastos_equipos',  # URL a la que redirigir
         )
 
@@ -505,8 +555,7 @@ def eliminar_gastos_materiales(request, slug, gasto_id):
             request=request,
             slug=slug,
             modelo=GastosMateriales,
-            instancia_id=gasto_id,
-            category_update='gasto',  
+            instancia_id=gasto_id, 
             redirect_url='contabilidad:gastos_materiales',  # URL a la que redirigir
         )
 
@@ -516,8 +565,7 @@ def eliminar_gastos_seguridad(request, slug, gasto_id):
             request=request,
             slug=slug,
             modelo=GastosSeguridad,
-            instancia_id=gasto_id,
-            category_update='gasto',  
+            instancia_id=gasto_id, 
             redirect_url='contabilidad:gastos_seguridad',  # URL a la que redirigir
         )
 
@@ -527,8 +575,7 @@ def eliminar_gastos_vehiculos(request, slug, gasto_id):
             request=request,
             slug=slug,
             modelo=GastosVehiculos,
-            instancia_id=gasto_id,
-            category_update='gasto',  
+            instancia_id=gasto_id,  
             redirect_url='contabilidad:gastos_vehiculos',  # URL a la que redirigir
         )
 
@@ -538,7 +585,6 @@ def eliminar_ingresos(request, slug, gasto_id):
             request=request,
             slug=slug,
             modelo=Ingresos,
-            instancia_id=gasto_id,
-            category_update='ingreso', 
+            instancia_id=gasto_id, 
             redirect_url='contabilidad:ingresos',  # URL a la que redirigir
         )
