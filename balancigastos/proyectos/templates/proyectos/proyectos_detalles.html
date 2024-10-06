@@ -49,10 +49,10 @@
     </li>
     <li class="list-group-item"><strong>Ingresos Totales IVA:</strong> {{ total_iva_ingresos|pesos }}</li>
 
-    
-      <a href="{% url 'proyectos:export_project_details_to_excel' object.slug %}" class="btn btn-danger m-5">Descargar
-        proyecto en Excel</a>
-    
+
+    <a href="{% url 'proyectos:export_project_details_to_excel' object.slug %}" class="btn btn-danger m-5">Descargar
+      proyecto en Excel</a>
+
   </ul>
 
   <ul class="list-group col-4">
@@ -81,16 +81,129 @@
 </div>
 
 
+<hr class="border border-danger border-3 opacity-75 mt-5">
+
+<h4 class="h4 text-center mt-3 mb-3 text-danger">Tablero de {{ object.proyecto }}</h4>
 
 <div class="container mt-2">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Ingresos vs Gastos - Semanales</h5>
+          <div id="grafica1" style="width:100%;height:300px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Porcentaje de gastos por categoría</h5>
+          <div id="grafica3" style="width:100%;height:400px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Ingresos vs Gastos - Totales</h5>
+          <div id="grafica2" style="width:100%;height:400px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Ingresos vs Gastos - Gráfica 5</h5>
+          <div id="grafica5" style="width:100%;height:400px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Ingresos vs Gastos - Gráfica 4</h5>
+          <div id="grafica4" style="width:100%;height:400px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  var graph = JSON.parse('{{ graph_json|escapejs }}');
+  var graph2 = JSON.parse('{{ graph_json2|escapejs }}');
+  var graph3 = JSON.parse('{{ graph_json3|escapejs }}');
+  Plotly.newPlot('grafica1', graph.data, graph.layout);
+  Plotly.newPlot('grafica2', graph2.data, graph2.layout);
+  Plotly.newPlot('grafica3', graph3.data, graph3.layout);
+  Plotly.newPlot('grafica4', graph.data, graph.layout);
+  Plotly.newPlot('grafica5', graph.data, graph.layout);
+</script>
+
+
+<!-- <div class="container mt-2">
   
   <div id="grafica" style="width:600px;height:400px;"></div>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  
   <script type="text/javascript">
     var graph = JSON.parse('{{ graph_json|escapejs }}');
     Plotly.newPlot('grafica', graph.data, graph.layout);
   </script>
-</div>
+</div> -->
+
+<!-- <div class="container mt-2">
+  <div class="row">
+    <div class="col-md-6">
+      <div id="grafica1" style="width:100%;height:400px;"></div>
+      <script type="text/javascript">
+        var graph1 = JSON.parse('{{ graph_json|escapejs }}');
+        Plotly.newPlot('grafica1', graph1.data, graph1.layout);
+      </script>
+    </div>
+    <div class="col-md-6">
+      <div id="grafica2" style="width:100%;height:400px;"></div>
+      <script type="text/javascript">
+        var graph2 = JSON.parse('{{ graph_json|escapejs }}');
+        Plotly.newPlot('grafica2', graph2.data, graph2.layout);
+      </script>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div id="grafica3" style="width:100%;height:400px;"></div>
+      <script type="text/javascript">
+        var graph3 = JSON.parse('{{ graph_json|escapejs }}');
+        Plotly.newPlot('grafica3', graph3.data, graph3.layout);
+      </script>
+    </div>
+    <div class="col-md-6">
+      <div id="grafica4" style="width:100%;height:400px;"></div>
+      <script type="text/javascript">
+        var graph4 = JSON.parse('{{ graph_json|escapejs }}');
+        Plotly.newPlot('grafica4', graph4.data, graph4.layout);
+      </script>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6 offset-md-3">
+      <div id="grafica5" style="width:100%;height:400px;"></div>
+      <script type="text/javascript">
+        var graph5 = JSON.parse('{{ graph_json|escapejs }}');
+        Plotly.newPlot('grafica5', graph5.data, graph5.layout);
+      </script>
+    </div>
+  </div>
+</div> -->
+
 {% endif %}
 
 {% endblock %}

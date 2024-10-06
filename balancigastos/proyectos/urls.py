@@ -13,6 +13,5 @@ urlpatterns = [
     path('proyectos/<slug:slug>/toggle-estatus/', views.toggle_estatus_proyecto, name='toggle_estatus_proyecto'),
     path('exportar-proyectos/', export_proyectos_to_excel, name='export_proyectos_to_excel'),
     path('exportar-detalles-proyecto/<slug:proyecto_slug>/', export_project_details_to_excel, name='export_project_details_to_excel'),
-    path('graficas',views.graficas_view,name='graficas')
 
 ]

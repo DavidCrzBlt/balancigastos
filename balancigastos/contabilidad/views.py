@@ -11,6 +11,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from decimal import Decimal
 from django.contrib import messages
 
+import pandas as pd
+
 # Create your views here.
 
 ### Vistas de detalle de proyecto ------------------------------------------- ###
@@ -207,6 +209,48 @@ class GastosSeguridadListView(LoginRequiredMixin,ListView):
 # Escribimos dos funciones que vamos a reutilizar después
 ### ------------------------------------------------------------------------- ###
 ### ------------------------------------------------------------------------- ###
+
+# Recalcular gastos e ingresos por fecha. Esto se usará para detalle de proyecto después.
+def recalcular_ingresos_gastos_por_fecha(proyecto_id):
+    # Obtener ingresos agrupados por fecha
+    ingresos = Ingresos.objects.filter(proyecto_id=proyecto_id).values('fecha').annotate(total_ingresos=Sum('monto'))
+    df_ingresos = pd.DataFrame(list(ingresos))
+    df_ingresos['fecha'] = pd.to_datetime(df_ingresos['fecha'])
+    df_ingresos.set_index('fecha', inplace=True)
+
+    # Inicializar DataFrame para almacenar los totales de gastos
+    df_gastos_totales = pd.DataFrame()
+
+    # Definir todas las tablas de gastos a considerar
+    tablas_gastos = [GastosVehiculos, GastosGenerales, GastosMateriales, GastosSeguridad, GastosManoObra, GastosEquipos]
+
+    # Iterar sobre cada tabla de gastos, obtener los datos y agregarlos
+    for tabla in tablas_gastos:
+        gastos = tabla.objects.filter(proyecto_id=proyecto_id).values('fecha').annotate(total_gastos=Sum('monto'))
+        df_gastos = pd.DataFrame(list(gastos))
+        
+        if not df_gastos.empty:  # Solo si hay datos en la tabla
+            df_gastos['fecha'] = pd.to_datetime(df_gastos['fecha'])
+            df_gastos.set_index('fecha', inplace=True)
+
+            # Sumar los valores de esta tabla al DataFrame de totales
+            if df_gastos_totales.empty:
+                df_gastos_totales = df_gastos
+            else:
+                df_gastos_totales = df_gastos_totales.add(df_gastos, fill_value=0)
+
+    # Agrupar ingresos y gastos por semana
+    ingresos_semanales = df_ingresos.resample('W').sum()
+    gastos_semanales = df_gastos_totales.resample('W').sum()
+
+    # Unir los DataFrames de ingresos y gastos en uno solo
+    df_semanal = pd.merge(ingresos_semanales, gastos_semanales, left_index=True, right_index=True, how='outer').fillna(0)
+
+    # Renombrar columnas para que tengan sentido en la gráfica
+    df_semanal.columns = ['total_ingresos', 'total_gastos']
+
+    return df_semanal
+
 
 # Recalcular los totales de ingresos y gastos para el proyecto
 def recalcular_totales_proyecto(proyecto_id):

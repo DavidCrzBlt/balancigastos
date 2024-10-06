@@ -11,12 +11,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from decimal import Decimal
 
+from .graficas import grafica_ingresos_vs_gastos_semanales, grafica_ingresos_vs_gastos, grafica_gastos_categoria
+
 import io
 from django.http import HttpResponse
 from openpyxl import Workbook
-
-import plotly.express as px
-import pandas as pd
 
 # Create your views here.
 
@@ -81,25 +80,16 @@ class ProyectosDetailView(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
         proyecto = self.get_object()
 
+        # ----------------------------------------------------------------------#
         # Llamar a la función recalcular_totales_proyecto que está en views.py de contabilidad
         totales = recalcular_totales_proyecto(proyecto.id)
-
         # Añadir los valores recalculados al contexto
         context.update(totales)
+        # ----------------------------------------------------------------------#
 
-        # Generar datos de la gráfica
-        data = {
-            'Categoría': ['Ingresos', 'Gastos', 'IVA'],
-            'Montos': [totales['total_ingresos'], totales['total_gastos'], totales['iva_neto']]
-        }
-        df = pd.DataFrame(data)
-
-        # Crear gráfica con Plotly
-        fig = px.bar(df, x='Categoría', y='Montos', title=f'Proyecto {proyecto.proyecto}')
-        
-        # Convertir la gráfica a JSON para pasarla al template
-        graph_json = fig.to_json()
-        context['graph_json'] = graph_json
+        context['graph_json'] = grafica_ingresos_vs_gastos_semanales(proyecto.id)
+        context['graph_json2'] = grafica_ingresos_vs_gastos(proyecto.id)
+        context['graph_json3'] = grafica_gastos_categoria(proyecto.id)
 
         return context
 
@@ -294,20 +284,6 @@ def export_project_details_to_excel(request, proyecto_slug):
     return response
 
 
-
-def graficas_view(request):
-    # Datos de ejemplo o consulta de la base de datos
-    data = {
-        'categoría': ['Ingresos', 'Gastos', 'IVA'],
-        'montos': [1000, 700, 300],
-    }
-    
-    df = pd.DataFrame(data)
-    
-    # Crear la gráfica con Plotly
-    fig = px.bar(df, x='categoría', y='montos', title='Resumen del Proyecto')
-
-    # Convertir la gráfica a JSON para enviarla al template
-    graph_json = fig.to_json()
-
-    return render(request, 'proyectos/grafica_template.html', {'graph_json': graph_json})
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
