@@ -9,7 +9,7 @@ class Empleados(models.Model):
     nombres = models.CharField(max_length=255,null=False)
     apellido_paterno = models.CharField(max_length=255,null=False)
     apellido_materno = models.CharField(max_length=255,null=False)
-    rfc = models.CharField(max_length=100,null=False)
+    rfc = models.CharField(max_length=100,null=False,unique=True)
     infonavit = models.BooleanField(default=False)
     imss = models.BooleanField(default=False)
     status = models.BooleanField(default=True)

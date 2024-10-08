@@ -411,6 +411,23 @@ def registro_nominas(request,slug):
     return render(request, 'empleados/registro_nominas.html',{'nominas_form':form,'proyecto':proyecto})
 
 ### -------------------------------------------------------------------------- ###
+### ------------------ Funciones de edición ------------------------------ ###
+### -------------------------------------------------------------------------- ###
+
+def editar_empleado(request,empleado_id):
+    empleados = Empleados.objects.all()
+    empleado = get_object_or_404(Empleados,id=empleado_id)
+    form_class = EmpleadosForm(request.POST or None, instance=empleado)
+    if request.method == "POST":
+        if form_class.is_valid():
+            form_class.save()
+            messages.success(request, 'El empleado ha sido editado exitosamente.')
+            return redirect('empleados:empleados')
+
+    return render(request,'empleados/registrar_empleados.html',{'empleados_form':form_class,'empleados':empleados})
+
+
+### -------------------------------------------------------------------------- ###
 ### ------------------ Funciones de eliminación ------------------------------ ###
 ### -------------------------------------------------------------------------- ###
 

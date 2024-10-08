@@ -11,6 +11,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from decimal import Decimal
 
+from .graficas import grafica_ingresos_vs_gastos_semanales, grafica_ingresos_vs_gastos, grafica_gastos_categoria
+
 import io
 from django.http import HttpResponse
 from openpyxl import Workbook
@@ -78,11 +80,16 @@ class ProyectosDetailView(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
         proyecto = self.get_object()
 
+        # ----------------------------------------------------------------------#
         # Llamar a la función recalcular_totales_proyecto que está en views.py de contabilidad
         totales = recalcular_totales_proyecto(proyecto.id)
-
         # Añadir los valores recalculados al contexto
         context.update(totales)
+        # ----------------------------------------------------------------------#
+
+        context['graph_json'] = grafica_ingresos_vs_gastos_semanales(proyecto.id)
+        context['graph_json2'] = grafica_ingresos_vs_gastos(proyecto.id)
+        context['graph_json3'] = grafica_gastos_categoria(proyecto.id)
 
         return context
 
@@ -275,3 +282,8 @@ def export_project_details_to_excel(request, proyecto_slug):
     response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename={proyecto_slug}_detalles.xlsx'
     return response
+
+
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
