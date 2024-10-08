@@ -74,6 +74,8 @@
     <li class="list-group-item"><strong>Empresa:</strong> {{ object.empresa }}</li>
     <li class="list-group-item"><strong>Estatus:</strong>{% if object.estatus == True %} Activo {% else %} Inactivo
       {% endif %}</li>
+    <li class="list-group-item"><strong>Nombre del proyecto:</strong> {{ object.proyecto }}</li>
+    <li class="list-group-item"><strong>Clave de proyecto:</strong> {{ object.clave_proyecto }}</li>
     <li class="list-group-item list-group-item-primary"><strong>Resultado Neto:</strong> {{ total_neto|pesos }}</li>
     <li class="list-group-item"><strong>I.V.A. Neto:</strong> {{ iva_neto|pesos }}</li>
   </ul>
@@ -114,25 +116,6 @@
       </div>
     </div>
   </div>
-
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <div class="card mb-4">
-        <div class="card-body">
-          <h5 class="card-title">Ingresos vs Gastos - Gráfica 5</h5>
-          <div id="grafica5" style="width:100%;height:400px;"></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card mb-4">
-        <div class="card-body">
-          <h5 class="card-title">Ingresos vs Gastos - Gráfica 4</h5>
-          <div id="grafica4" style="width:100%;height:400px;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script type="text/javascript">
@@ -142,67 +125,7 @@
   Plotly.newPlot('grafica1', graph.data, graph.layout);
   Plotly.newPlot('grafica2', graph2.data, graph2.layout);
   Plotly.newPlot('grafica3', graph3.data, graph3.layout);
-  Plotly.newPlot('grafica4', graph.data, graph.layout);
-  Plotly.newPlot('grafica5', graph.data, graph.layout);
 </script>
-
-
-<!-- <div class="container mt-2">
-  
-  <div id="grafica" style="width:600px;height:400px;"></div>
-
-  
-  <script type="text/javascript">
-    var graph = JSON.parse('{{ graph_json|escapejs }}');
-    Plotly.newPlot('grafica', graph.data, graph.layout);
-  </script>
-</div> -->
-
-<!-- <div class="container mt-2">
-  <div class="row">
-    <div class="col-md-6">
-      <div id="grafica1" style="width:100%;height:400px;"></div>
-      <script type="text/javascript">
-        var graph1 = JSON.parse('{{ graph_json|escapejs }}');
-        Plotly.newPlot('grafica1', graph1.data, graph1.layout);
-      </script>
-    </div>
-    <div class="col-md-6">
-      <div id="grafica2" style="width:100%;height:400px;"></div>
-      <script type="text/javascript">
-        var graph2 = JSON.parse('{{ graph_json|escapejs }}');
-        Plotly.newPlot('grafica2', graph2.data, graph2.layout);
-      </script>
-    </div>
-  </div>
-
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <div id="grafica3" style="width:100%;height:400px;"></div>
-      <script type="text/javascript">
-        var graph3 = JSON.parse('{{ graph_json|escapejs }}');
-        Plotly.newPlot('grafica3', graph3.data, graph3.layout);
-      </script>
-    </div>
-    <div class="col-md-6">
-      <div id="grafica4" style="width:100%;height:400px;"></div>
-      <script type="text/javascript">
-        var graph4 = JSON.parse('{{ graph_json|escapejs }}');
-        Plotly.newPlot('grafica4', graph4.data, graph4.layout);
-      </script>
-    </div>
-  </div>
-
-  <div class="row mt-4">
-    <div class="col-md-6 offset-md-3">
-      <div id="grafica5" style="width:100%;height:400px;"></div>
-      <script type="text/javascript">
-        var graph5 = JSON.parse('{{ graph_json|escapejs }}');
-        Plotly.newPlot('grafica5', graph5.data, graph5.layout);
-      </script>
-    </div>
-  </div>
-</div> -->
 
 {% endif %}
 
