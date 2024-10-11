@@ -13,6 +13,10 @@ def grafica_ingresos_vs_gastos_semanales(proyecto_id):
     # Obtener los ingresos y gastos por semana
     df_semanal = recalcular_ingresos_gastos_por_fecha(proyecto_id)
 
+    # Verifica si df_semanal tiene datos antes de graficar
+    if df_semanal.empty:
+        return None  # O devuelve un gráfico vacío o un mensaje adecuado
+
     # Convertir el índice a Datetime si es necesario (esto solo si el índice es de tipo DateField)
     df_semanal.index = pd.to_datetime(df_semanal.index)  # Asegura que el índice sea reconocido como fechas
 
@@ -43,6 +47,10 @@ def grafica_ingresos_vs_gastos(proyecto_id):
 
     # Obtener los ingresos y gastos totales
     df_totales = recalcular_totales_proyecto(proyecto_id)
+
+    # Verifica si df_totales tiene datos antes de graficar
+    if df_totales.empty:
+        return None  # O devuelve un gráfico vacío o un mensaje adecuado
 
     # Generar datos de la gráfica
     data = {
@@ -78,6 +86,11 @@ def grafica_gastos_categoria(proyecto_id):
 
     # Obtener los gastos por categoria
     df_totales = recalcular_totales_proyecto(proyecto_id)
+
+    # Verifica si df_totales tiene datos antes de graficar
+    if df_totales.empty:
+        return None  # O devuelve un gráfico vacío o un mensaje adecuado
+
 
     total_gastos = df_totales['total_gastos']
 
