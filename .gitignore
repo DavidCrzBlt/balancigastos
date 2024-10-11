@@ -1,5 +1,5 @@
 # Entorno Virtual
-balancigastos_env/
+venv/
 
 # Archivos de configuración de IDE
 *.pyc
