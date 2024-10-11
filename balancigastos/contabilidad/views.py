@@ -215,8 +215,13 @@ def recalcular_ingresos_gastos_por_fecha(proyecto_id):
     # Obtener ingresos agrupados por fecha
     ingresos = Ingresos.objects.filter(proyecto_id=proyecto_id).values('fecha').annotate(total_ingresos=Sum('monto'))
     df_ingresos = pd.DataFrame(list(ingresos))
-    df_ingresos['fecha'] = pd.to_datetime(df_ingresos['fecha'])
-    df_ingresos.set_index('fecha', inplace=True)
+
+    # Verificar si df_ingresos está vacío y crear un DataFrame vacío si es necesario
+    if df_ingresos.empty:
+        df_ingresos = pd.DataFrame(columns=['fecha', 'total_ingresos'])
+    else:
+        df_ingresos['fecha'] = pd.to_datetime(df_ingresos['fecha'])
+        df_ingresos.set_index('fecha', inplace=True)
 
     # Inicializar DataFrame para almacenar los totales de gastos
     df_gastos_totales = pd.DataFrame()
@@ -239,9 +244,15 @@ def recalcular_ingresos_gastos_por_fecha(proyecto_id):
             else:
                 df_gastos_totales = df_gastos_totales.add(df_gastos, fill_value=0)
 
+    # Si no hay gastos, crear un DataFrame vacío
+    if df_gastos_totales.empty:
+        df_gastos_totales = pd.DataFrame(columns=['fecha', 'total_gastos'])
+        df_gastos_totales.set_index(pd.DatetimeIndex([]), inplace=True)
+
     # Agrupar ingresos y gastos por semana
-    ingresos_semanales = df_ingresos.resample('W').sum()
-    gastos_semanales = df_gastos_totales.resample('W').sum()
+    ingresos_semanales = df_ingresos.resample('W').sum() if not df_ingresos.empty else pd.DataFrame(columns=['total_ingresos'])
+    
+    gastos_semanales = df_gastos_totales.resample('W').sum() if not df_gastos_totales.empty else pd.DataFrame(columns=['total_gastos'])
 
     # Unir los DataFrames de ingresos y gastos en uno solo
     df_semanal = pd.merge(ingresos_semanales, gastos_semanales, left_index=True, right_index=True, how='outer').fillna(0)
