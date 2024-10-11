@@ -18,13 +18,13 @@ def grafica_ingresos_vs_gastos_semanales(proyecto_id):
         return None  # O devuelve un gráfico vacío o un mensaje adecuado
 
     # Convertir el índice a Datetime si es necesario (esto solo si el índice es de tipo DateField)
-    df_semanal.index = pd.to_datetime(df_semanal.index)  # Asegura que el índice sea reconocido como fechas
+    # df_semanal.index = pd.to_datetime(df_semanal.index)  # Asegura que el índice sea reconocido como fechas
 
     # Agrupar por semana si es necesario, por ejemplo, usando resample:
     df_semanal = df_semanal.resample('W').sum()
 
     # Crear la gráfica de líneas
-    fig = px.line(df_semanal, x=df_semanal.index, y=['total_ingresos', 'total_gastos'], markers=True)
+    fig = px.line(df_semanal.reset_index(), x='fecha', y=['total_ingresos', 'total_gastos'], markers=True)
 
     fig.update_layout(
     xaxis_title='Fecha (Semana)',
