@@ -91,15 +91,19 @@ def grafica_gastos_categoria(proyecto_id):
 
     total_gastos = df_totales['total_gastos']
 
-    # Calcular los porcentajes
-    porcentajes_gastos = [
-        (df_totales['gastos_vehiculos'] / total_gastos),
-        (df_totales['gastos_generales'] / total_gastos),
-        (df_totales['gastos_materiales'] / total_gastos),
-        (df_totales['gastos_seguridad'] / total_gastos),
-        (df_totales['gastos_equipos'] / total_gastos),
-        (df_totales['gastos_mano_obra'] / total_gastos)
-    ]
+    if total_gastos > 0:
+        # Calcular los porcentajes
+        porcentajes_gastos = [
+            (df_totales['gastos_vehiculos'] / total_gastos),
+            (df_totales['gastos_generales'] / total_gastos),
+            (df_totales['gastos_materiales'] / total_gastos),
+            (df_totales['gastos_seguridad'] / total_gastos),
+            (df_totales['gastos_equipos'] / total_gastos),
+            (df_totales['gastos_mano_obra'] / total_gastos)
+        ]
+    else:
+        # Manejar el caso donde total_gastos es cero
+        return None  # O un mensaje que indique que no hay datos para mostrar
 
     # Generar datos de la gráfica
     data = {
