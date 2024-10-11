@@ -48,6 +48,9 @@ def grafica_ingresos_vs_gastos(proyecto_id):
     # Obtener los ingresos y gastos totales
     df_totales = recalcular_totales_proyecto(proyecto_id)
 
+    if not df_totales:
+        return None
+
     # Generar datos de la gráfica
     data = {
         'Categoría': ['Ingresos', 'Gastos', 'IVA'],
@@ -82,6 +85,9 @@ def grafica_gastos_categoria(proyecto_id):
 
     # Obtener los gastos por categoria
     df_totales = recalcular_totales_proyecto(proyecto_id)
+
+    if not df_totales:
+        return None
 
     total_gastos = df_totales['total_gastos']
 
