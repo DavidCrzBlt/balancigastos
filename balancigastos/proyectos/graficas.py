@@ -24,9 +24,12 @@ def grafica_ingresos_vs_gastos_semanales(proyecto_id):
     # Agrupar por semana si es necesario, por ejemplo, usando resample:
     df_semanal = df_semanal.resample('W').sum()
 
-    # Verificar si las columnas necesarias existen antes de graficar
-    if 'total_ingresos' not in df_semanal.columns or 'total_gastos' not in df_semanal.columns:
-        return None  # O maneja el error de una forma adecuada
+    # Asegurarse de que las columnas 'total_ingresos' y 'total_gastos' existan en el DataFrame
+    if 'total_ingresos' not in df_semanal.columns:
+        df_semanal['total_ingresos'] = 0  # Rellenar con ceros si no hay ingresos
+
+    if 'total_gastos' not in df_semanal.columns:
+        df_semanal['total_gastos'] = 0  # Rellenar con ceros si no hay gastos
 
     # Crear la gráfica de líneas
     fig = px.line(df_semanal.reset_index(), x='fecha', y=['total_ingresos', 'total_gastos'], markers=True)
