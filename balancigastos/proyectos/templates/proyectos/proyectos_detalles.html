@@ -119,10 +119,10 @@
 </div>
 
 <script type="text/javascript">
-  var graph = JSON.parse('{{ graph_json|escapejs }}');
+  // var graph = JSON.parse('{{ graph_json|escapejs }}');
   var graph2 = JSON.parse('{{ graph_json2|escapejs }}');
   var graph3 = JSON.parse('{{ graph_json3|escapejs }}');
-  Plotly.newPlot('grafica1', graph.data, graph.layout);
+  // Plotly.newPlot('grafica1', graph.data, graph.layout);
   Plotly.newPlot('grafica2', graph2.data, graph2.layout);
   Plotly.newPlot('grafica3', graph3.data, graph3.layout);
 </script>
