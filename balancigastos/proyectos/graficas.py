@@ -17,22 +17,8 @@ def grafica_ingresos_vs_gastos_semanales(proyecto_id):
     if df_semanal.empty:
         return None  # O devuelve un gráfico vacío o un mensaje adecuado
 
-    # Convertir el índice a Datetime si es necesario (esto solo si el índice es de tipo DateField)
-    if not isinstance(df_semanal.index, pd.DatetimeIndex):
-        df_semanal.index = pd.to_datetime(df_semanal.index)  # Asegura que el índice sea reconocido como fechas
-
-    # Asegurarse de que las columnas 'total_ingresos' y 'total_gastos' existan en el DataFrame
-    if 'total_ingresos' not in df_semanal.columns:
-        df_semanal['total_ingresos'] = 0  # Rellenar con ceros si no hay ingresos
-
-    if 'total_gastos' not in df_semanal.columns:
-        df_semanal['total_gastos'] = 0  # Rellenar con ceros si no hay gastos
-
-    # Agrupar por semana si es necesario, por ejemplo, usando resample:
-    df_semanal = df_semanal.resample('W').sum()
-    
     # Crear la gráfica de líneas
-    fig = px.line(df_semanal.reset_index(), x='fecha', y=['total_ingresos', 'total_gastos'], markers=True)
+    fig = px.line(df_semanal, x=df_semanal.index, y=['total_ingresos', 'total_gastos'], markers=True)
 
     fig.update_layout(
     xaxis_title='Fecha (Semana)',
@@ -42,7 +28,16 @@ def grafica_ingresos_vs_gastos_semanales(proyecto_id):
     plot_bgcolor='rgba(0,0,0,0)',
     paper_bgcolor='rgba(255, 255, 255, 0.8)',
     font=dict(family="Arial, sans-serif", size=16),
-    template="plotly_white"
+    template="plotly_white",
+    yaxis=dict(range=[0, None]),
+    shapes=[
+        # Línea horizontal (Eje X)
+        dict(type='line', x0=df_semanal.index[0], x1=df_semanal.index[-1], y0=0, y1=0,
+             line=dict(color='black', width=1)),
+        # Línea vertical (Eje Y)
+        dict(type='line', x0=df_semanal.index[0], x1=df_semanal.index[0], y0=0, y1=df_semanal['total_ingresos'].max(),
+             line=dict(color='black', width=1))
+    ]
     )
 
     # Cambiar los nombres de la leyenda
