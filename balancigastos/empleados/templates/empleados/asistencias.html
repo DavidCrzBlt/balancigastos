@@ -47,7 +47,8 @@
       <thead>
          <tr>
             <th scope="col">#</th>
-            <th scope="col">Nombre</th>
+            <th scope="col">Nombre completo</th>
+            <th scope="col">RFC</th>
             <th scope="col">Fecha</th>
             <th scope="col">Asistencia</th>
             <th scope="col">Horas extras</th>
@@ -58,6 +59,7 @@
          {% for asistencia in asistencias %}
          <tr>
             <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ asistencia.empleado.nombres }} {{ asistencia.empleado.apellido_paterno }} {{ asistencia.empleado.apellido_materno }}</td>
             <td>{{ asistencia.empleado.rfc }}</td>
             <td>{{ asistencia.fecha }}</td>
             <td>{{ asistencia.asistencias }}</td>

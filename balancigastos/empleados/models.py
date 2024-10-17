@@ -14,6 +14,9 @@ class Empleados(models.Model):
     imss = models.BooleanField(default=False)
     status = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.rfc
+
 class Asistencias(models.Model):
     empleado = models.ForeignKey(Empleados,related_name="asistencias",on_delete=models.CASCADE)
     proyecto = models.ForeignKey(Proyectos,related_name="asistencias",on_delete=models.CASCADE)
