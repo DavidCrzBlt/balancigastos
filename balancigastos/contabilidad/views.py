@@ -5,7 +5,7 @@ from .models import GastosVehiculos, GastosGenerales, GastosMateriales, GastosMa
 from proyectos.models import Proyectos
 from empleados.models import Salario
 from django.db.models import Sum, F
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, ExtractWeek, ExtractYear
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from decimal import Decimal
@@ -212,54 +212,89 @@ class GastosSeguridadListView(LoginRequiredMixin,ListView):
 
 # Recalcular gastos e ingresos por fecha. Esto se usará para detalle de proyecto después.
 def recalcular_ingresos_gastos_por_fecha(proyecto_id):
-    # Obtener ingresos agrupados por fecha
-    ingresos = Ingresos.objects.filter(proyecto_id=proyecto_id).values('fecha').annotate(total_ingresos=Sum('monto'))
-    df_ingresos = pd.DataFrame(list(ingresos))
 
-    # Verificar si df_ingresos está vacío y crear un DataFrame vacío si es necesario
-    if df_ingresos.empty:
-        df_ingresos = pd.DataFrame(columns=['fecha', 'total_ingresos'])
-    else:
-        df_ingresos['fecha'] = pd.to_datetime(df_ingresos['fecha'])
-        df_ingresos.set_index('fecha', inplace=True)
+    # Obtener ingresos agrupados por año y semana
+    ingresos_semanales = (
+        Ingresos.objects
+        .filter(proyecto_id=proyecto_id)
+        .annotate(semana=ExtractWeek('fecha'), año=ExtractYear('fecha'))
+        .values('año', 'semana')
+        .annotate(total_ingresos=Sum('monto'))
+        .order_by('año', 'semana')
+    )
 
-    # Inicializar DataFrame para almacenar los totales de gastos
-    df_gastos_totales = pd.DataFrame()
+    df_ingresos = pd.DataFrame(columns=['fecha','total_ingresos'])
 
+    if ingresos_semanales.exists():
+        # Calcular la fecha correspondiente a cada año y semana
+        for ingreso in ingresos_semanales:
+            año = ingreso['año']
+            semana = ingreso['semana']
+            fecha = f'{año}-w{semana}'
+            total_ingresos = ingreso['total_ingresos']
+
+            # Agregar los datos al df
+            df_ingresos.loc[len(df_ingresos)] = [fecha,total_ingresos]
+            
     # Definir todas las tablas de gastos a considerar
     tablas_gastos = [GastosVehiculos, GastosGenerales, GastosMateriales, GastosSeguridad, GastosManoObra, GastosEquipos]
 
+    df_gastos = pd.DataFrame(columns=['fecha','total_gastos'])
+
     # Iterar sobre cada tabla de gastos, obtener los datos y agregarlos
     for tabla in tablas_gastos:
-        gastos = tabla.objects.filter(proyecto_id=proyecto_id).values('fecha').annotate(total_gastos=Sum('monto'))
-        df_gastos = pd.DataFrame(list(gastos))
+        # Obtener ingresos agrupados por año y semana
+        gastos_semanales = (
+            tabla.objects
+            .filter(proyecto_id=proyecto_id)
+            .annotate(semana=ExtractWeek('fecha'), año=ExtractYear('fecha'))
+            .values('año','semana')
+            .annotate(total_gastos=Sum('monto'))
+            .order_by('año', 'semana')
+        ) 
         
-        if not df_gastos.empty:  # Solo si hay datos en la tabla
-            df_gastos['fecha'] = pd.to_datetime(df_gastos['fecha'])
-            df_gastos.set_index('fecha', inplace=True)
+        if gastos_semanales.exists():  # Solo si hay gastos en esa categoría
 
-            # Sumar los valores de esta tabla al DataFrame de totales
-            if df_gastos_totales.empty:
-                df_gastos_totales = df_gastos
-            else:
-                df_gastos_totales = df_gastos_totales.add(df_gastos, fill_value=0)
+            for gasto in gastos_semanales:
+                año = gasto['año']
+                semana = gasto['semana']
+                fecha = f'{año}-w{semana}'
+                total_gastos = gasto['total_gastos']
 
-    # Si no hay gastos, crear un DataFrame vacío
-    if df_gastos_totales.empty:
-        df_gastos_totales = pd.DataFrame(columns=['fecha', 'total_gastos'])
-        df_gastos_totales.set_index(pd.DatetimeIndex([]), inplace=True)
+                # Buscar si existe la fecha
+                filtro = df_gastos[df_gastos['fecha'] == fecha]
 
-    # Agrupar ingresos y gastos por semana
-    ingresos_semanales = df_ingresos.resample('W').sum() if not df_ingresos.empty else pd.DataFrame(columns=['total_ingresos'])
+                # Si la búsqueda de fecha encontró una coincidencia
+                if not filtro.empty:
+                    i = filtro.index[0] # Encuentra el índice de la fecha
+                    df_gastos['total_gastos'].loc[i] += total_gastos #Sumar los gastos
+                else:
+                    # Crear un nuevo dato si no existe
+                    df_gastos.loc[len(df_gastos)] = [fecha,total_gastos]
+
+    # Unir los dataframes usando la columna fecha
+    df_semanal = pd.merge(df_ingresos,df_gastos,on='fecha',how='outer')
+
+    # Asegurarte de que ambas columnas sean numéricas
+    df_semanal['total_ingresos'] = pd.to_numeric(df_semanal['total_ingresos'], errors='coerce')
+    df_semanal['total_gastos'] = pd.to_numeric(df_semanal['total_gastos'], errors='coerce')
+
+    # Reemplazar NaN por 0 en los que no tengan valores
+    df_semanal.fillna(0, inplace=True)
+
+    # Separar el año y la semana
+    df_semanal[['año', 'semana']] = df_semanal['fecha'].str.extract(r'(\d{4})-w(\d{2})')
+    df_semanal['año'] = df_semanal['año'].astype(int)
+    df_semanal['semana'] = df_semanal['semana'].astype(int)
+
+    # Convertir a fecha correspondiente al domingo de esa semana (cambiamos a 7 en lugar de 1)
+    df_semanal['fecha'] = pd.to_datetime(df_semanal['año'].astype(str) + df_semanal['semana'].astype(str) + '7', format='%G%V%u')
+
+    # Ordenar el DataFrame por la columna de 'fecha'
+    df_semanal = df_semanal.sort_values('fecha')
+    df_semanal.set_index('fecha',inplace=True)
+    df_semanal.drop(columns=['año','semana'], inplace=True)
     
-    gastos_semanales = df_gastos_totales.resample('W').sum() if not df_gastos_totales.empty else pd.DataFrame(columns=['total_gastos'])
-
-    # Unir los DataFrames de ingresos y gastos en uno solo
-    df_semanal = pd.merge(ingresos_semanales, gastos_semanales, left_index=True, right_index=True, how='outer').fillna(0)
-
-    # Renombrar columnas para que tengan sentido en la gráfica
-    df_semanal.columns = ['total_ingresos', 'total_gastos']
-
     return df_semanal
 
 
